@@ -106,7 +106,7 @@ func (p *pod) GenerateK8s(obj kubernetes.Resource, opts ...FieldOptions) mapstr.
 		if jobName, ok := jobName.(string); ok {
 			dep := p.getCronjobOfJob(jobName, po.GetNamespace())
 			if dep != "" {
-				out.Put("cronjob.name", dep)
+				_, _ = out.Put("cronjob.name", dep)
 			}
 		}
 	}
