@@ -215,7 +215,10 @@ func GenerateHints(annotations mapstr.M, container, prefix string) mapstr.M {
 					// Insert only if there is no entry already. container level annotations take
 					// higher priority.
 					if _, err := hints.GetValue(hintKey); err != nil {
-						hints.Put(hintKey, rawValue)
+						_, err = hints.Put(hintKey, rawValue)
+						if err != nil {
+							continue
+						}
 					}
 				} else if container != "" {
 					// Only consider annotations that are of type mapstr.M as we are looking for
@@ -233,7 +236,10 @@ func GenerateHints(annotations mapstr.M, container, prefix string) mapstr.M {
 							if len(parts) == 2 {
 								// key will be the hint type
 								hintKey := fmt.Sprintf("%s.%s", key, parts[1])
-								hints.Put(hintKey, rawVal)
+								_, err := hints.Put(hintKey, rawVal)
+								if err != nil {
+									continue
+								}
 							}
 						}
 					}
