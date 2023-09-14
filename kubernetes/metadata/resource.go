@@ -18,6 +18,7 @@
 package metadata
 
 import (
+	"regexp"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -97,6 +98,7 @@ func (r *Resource) GenerateECS(obj kubernetes.Resource) mapstr.M {
 
 // GenerateK8s takes a kind and an object and creates metadata for the same
 func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...FieldOptions) mapstr.M {
+	matched := false
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		return nil
@@ -167,23 +169,26 @@ func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...
 }
 
 func generateMapSubset(input map[string]string, keys []string, dedot bool) mapstr.M {
+	var matched bool
 	output := mapstr.M{}
 	if input == nil {
 		return output
 	}
 
 	for _, key := range keys {
-		value, ok := input[key]
-		if ok {
-			if dedot {
-				dedotKey := utils.DeDot(key)
-				_, _ = output.Put(dedotKey, value)
-			} else {
-				_ = safemapstr.Put(output, key, value)
+		for _, label := range input {
+			matched, _ = regexp.MatchString(key, label)
+			if matched == true {
+				if dedot {
+					dedotKey := utils.DeDot(label)
+					_, _ = output.Put(dedotKey, label)
+				} else {
+					_ = safemapstr.Put(output, label, label)
+				}
 			}
+			matched = false
 		}
 	}
-
 	return output
 }
 
