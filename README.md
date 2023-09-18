@@ -40,7 +40,7 @@ After the tag is available a Release can be created using this tag and the prope
 
 ## Development
 
-When one wants to edit and test the library as part of the Beats or Elastic Agent projects, the local version of the dependency can referenced with the following:
+When one wants to edit and test the library as part of the Beats or Elastic Agent projects, the local version of the dependency can be referenced with the following:
 
 `go.mod`:
 ```golang
