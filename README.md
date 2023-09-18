@@ -44,7 +44,7 @@ When one wants to edit and test the library as part of the Beats or Elastic Agen
 
 `go.mod`:
 ```golang
-replace github.com/elastic/elastic-agent-autodiscover => /home/chrismark/go/src/github.com/elastic/elastic-agent-autodiscover
+replace github.com/elastic/elastic-agent-autodiscover => /home/user/go/src/github.com/elastic/elastic-agent-autodiscover
 ```
 
 This will use the local code rather than the upstream dependency. 
