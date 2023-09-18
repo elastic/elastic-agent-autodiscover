@@ -98,7 +98,6 @@ func (r *Resource) GenerateECS(obj kubernetes.Resource) mapstr.M {
 
 // GenerateK8s takes a kind and an object and creates metadata for the same
 func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...FieldOptions) mapstr.M {
-	matched := false
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		return nil
@@ -179,12 +178,16 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool) mapst
 		for _, label := range input {
 			matched, _ = regexp.MatchString(key, label)
 			if matched == true {
-				if dedot {
-					dedotKey := utils.DeDot(label)
-					_, _ = output.Put(dedotKey, label)
-				} else {
-					_ = safemapstr.Put(output, label, label)
+				value, ok := input[label]
+				if ok {
+					if dedot {
+						dedotKey := utils.DeDot(label)
+						_, _ = output.Put(dedotKey, value)
+					} else {
+						_ = safemapstr.Put(output, label, value)
+					}
 				}
+
 			}
 			matched = false
 		}
