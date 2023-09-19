@@ -181,7 +181,7 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool) mapst
 	for _, key := range keys {
 		for label, value := range input {
 			matched, _ = regexp.MatchString(key, label)
-			if matched == true {
+			if matched {
 				if dedot {
 					dedotKey := utils.DeDot(label)
 					_, _ = output.Put(dedotKey, value)

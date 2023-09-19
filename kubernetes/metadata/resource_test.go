@@ -265,7 +265,7 @@ func TestNamespaceAwareResource_GenerateWithNamespace(t *testing.T) {
 
 func Test_generateMapSubset(t *testing.T) {
 
-	Labels_dedot := map[string]string{
+	Labelsdedot := map[string]string{
 		"app.kubernetes.io/name": "no",
 		"foo":                    "bar",
 	}
@@ -285,7 +285,7 @@ func Test_generateMapSubset(t *testing.T) {
 		"foo*",
 		"test",
 	}
-	expected_result1 := mapstr.M{
+	expectedresult1 := mapstr.M{
 		"foo":              "bar",
 		"foo1":             "bar1",
 		"foo2":             "bar2",
@@ -301,7 +301,7 @@ func Test_generateMapSubset(t *testing.T) {
 	key2 := []string{
 		"0?1",
 	}
-	expected_result2 := mapstr.M{
+	expectedresult2 := mapstr.M{
 		"foo1": "bar1",
 	}
 	output2 := generateMapSubset(Labels, key2, false)
@@ -310,7 +310,7 @@ func Test_generateMapSubset(t *testing.T) {
 	key3 := []string{
 		"^test",
 	}
-	expected_result3 := mapstr.M{
+	expectedresult3 := mapstr.M{
 		"test": "test1",
 	}
 	output3 := generateMapSubset(Labels, key3, false)
@@ -319,7 +319,7 @@ func Test_generateMapSubset(t *testing.T) {
 	key4 := []string{
 		"test$",
 	}
-	expected_result4 := mapstr.M{
+	expectedresult4 := mapstr.M{
 		"test":    "test1",
 		"footest": "footest1",
 	}
@@ -329,16 +329,16 @@ func Test_generateMapSubset(t *testing.T) {
 	key5 := []string{
 		"t{2}",
 	}
-	expected_result5 := mapstr.M{
+	expectedresult5 := mapstr.M{
 		"nottomatch": "no",
 	}
 	output5 := generateMapSubset(Labels, key5, false)
 
-	assert.Equal(t, expected_result1, output1)
-	assert.Equal(t, expected_result2, output2)
-	assert.Equal(t, expected_result3, output3)
-	assert.Equal(t, expected_result4, output4)
-	assert.Equal(t, expected_result5, output5)
+	assert.Equal(t, expectedresult1, output1)
+	assert.Equal(t, expectedresult2, output2)
+	assert.Equal(t, expectedresult3, output3)
+	assert.Equal(t, expectedresult4, output4)
+	assert.Equal(t, expectedresult5, output5)
 
 	//Dedot Validation
 	key6 := []string{
@@ -347,7 +347,7 @@ func Test_generateMapSubset(t *testing.T) {
 	expected_result6 := mapstr.M{
 		"app_kubernetes_io/name": "no",
 	}
-	output6 := generateMapSubset(Labels_dedot, key6, true)
+	output6 := generateMapSubset(Labelsdedot, key6, true)
 	assert.Equal(t, expected_result6, output6)
 
 }
