@@ -344,10 +344,10 @@ func Test_generateMapSubset(t *testing.T) {
 	key6 := []string{
 		"app.kubernetes.io",
 	}
-	expected_result6 := mapstr.M{
+	expectedresult6 := mapstr.M{
 		"app_kubernetes_io/name": "no",
 	}
 	output6 := generateMapSubset(Labelsdedot, key6, true)
-	assert.Equal(t, expected_result6, output6)
+	assert.Equal(t, expectedresult6, output6)
 
 }
