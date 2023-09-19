@@ -172,7 +172,6 @@ func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...
 }
 
 func generateMapSubset(input map[string]string, keys []string, dedot bool) mapstr.M {
-	var matched bool
 	output := mapstr.M{}
 	if input == nil {
 		return output
@@ -180,7 +179,7 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool) mapst
 
 	for _, key := range keys {
 		for label, value := range input {
-			matched, _ = regexp.MatchString(key, label)
+			matched, _ := regexp.MatchString(key, label)
 			if matched {
 				if dedot {
 					dedotKey := utils.DeDot(label)
