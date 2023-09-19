@@ -189,7 +189,6 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool) mapst
 				}
 
 			}
-			matched = false
 		}
 	}
 	return output
