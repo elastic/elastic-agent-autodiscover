@@ -98,7 +98,6 @@ func (r *Resource) GenerateECS(obj kubernetes.Resource) mapstr.M {
 
 // GenerateK8s takes a kind and an object and creates metadata for the same
 func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...FieldOptions) mapstr.M {
-	matched := false
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
 		return nil
@@ -112,7 +111,11 @@ func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...
 	}
 
 	// Exclude any labels that are present in the exclude_labels config
-	for _, label := range r.config.ExcludeLabels {
+	var labelMaptoExclude mapstr.M
+	if len(r.config.ExcludeLabels) != 0 {
+		labelMaptoExclude = generateMapSubset(accessor.GetLabels(), r.config.ExcludeLabels, r.config.LabelsDedot)
+	}
+	for label := range labelMaptoExclude {
 		_ = labelMap.Delete(label)
 	}
 
@@ -176,15 +179,16 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool) mapst
 	}
 
 	for _, key := range keys {
-		for _, label := range input {
+		for label, value := range input {
 			matched, _ = regexp.MatchString(key, label)
 			if matched == true {
 				if dedot {
 					dedotKey := utils.DeDot(label)
-					_, _ = output.Put(dedotKey, label)
+					_, _ = output.Put(dedotKey, value)
 				} else {
-					_ = safemapstr.Put(output, label, label)
+					_ = safemapstr.Put(output, label, value)
 				}
+
 			}
 			matched = false
 		}

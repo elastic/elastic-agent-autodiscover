@@ -262,3 +262,92 @@ func TestNamespaceAwareResource_GenerateWithNamespace(t *testing.T) {
 		})
 	}
 }
+
+func Test_generateMapSubset(t *testing.T) {
+
+	Labels_dedot := map[string]string{
+		"app.kubernetes.io/name": "no",
+		"foo":                    "bar",
+	}
+
+	Labels := map[string]string{
+		"nottomatch":       "no",
+		"foo":              "bar",
+		"foo1":             "bar1",
+		"foo2":             "bar2",
+		"foo-example":      "bar-example",
+		"test":             "test1",
+		"footest":          "footest1",
+		"simplefo-example": "simplefo-example1",
+	}
+	//Validating wildcards
+	key1 := []string{
+		"foo*",
+		"test",
+	}
+	expected_result1 := mapstr.M{
+		"foo":              "bar",
+		"foo1":             "bar1",
+		"foo2":             "bar2",
+		"foo-example":      "bar-example",
+		"test":             "test1",
+		"footest":          "footest1",
+		"simplefo-example": "simplefo-example1",
+	}
+
+	output1 := generateMapSubset(Labels, key1, false)
+
+	//Validating ?
+	key2 := []string{
+		"0?1",
+	}
+	expected_result2 := mapstr.M{
+		"foo1": "bar1",
+	}
+	output2 := generateMapSubset(Labels, key2, false)
+
+	//Validating start of a string
+	key3 := []string{
+		"^test",
+	}
+	expected_result3 := mapstr.M{
+		"test": "test1",
+	}
+	output3 := generateMapSubset(Labels, key3, false)
+
+	//Validating end of a string
+	key4 := []string{
+		"test$",
+	}
+	expected_result4 := mapstr.M{
+		"test":    "test1",
+		"footest": "footest1",
+	}
+	output4 := generateMapSubset(Labels, key4, false)
+
+	//Exact matches
+	key5 := []string{
+		"t{2}",
+	}
+	expected_result5 := mapstr.M{
+		"nottomatch": "no",
+	}
+	output5 := generateMapSubset(Labels, key5, false)
+
+	assert.Equal(t, expected_result1, output1)
+	assert.Equal(t, expected_result2, output2)
+	assert.Equal(t, expected_result3, output3)
+	assert.Equal(t, expected_result4, output4)
+	assert.Equal(t, expected_result5, output5)
+
+	//Dedot Validation
+	key6 := []string{
+		"app.kubernetes.io",
+	}
+	expected_result6 := mapstr.M{
+		"app_kubernetes_io/name": "no",
+	}
+	output6 := generateMapSubset(Labels_dedot, key6, true)
+	assert.Equal(t, expected_result6, output6)
+
+}
