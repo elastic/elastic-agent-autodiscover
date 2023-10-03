@@ -107,12 +107,12 @@ func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...
 	if len(r.config.IncludeLabels) == 0 {
 		labelMap = GenerateMap(accessor.GetLabels(), r.config.LabelsDedot)
 	} else {
-		labelMap = generateMapSubset(accessor.GetLabels(), r.config.IncludeLabels, r.config.LabelsDedot, r.config.UseRegex)
+		labelMap = generateMapSubset(accessor.GetLabels(), r.config.IncludeLabels, r.config.LabelsDedot, r.config.UseRegexInclude)
 	}
 
 	var labelMaptoExclude mapstr.M
 	if len(r.config.ExcludeLabels) != 0 {
-		labelMaptoExclude = generateMapSubset(accessor.GetLabels(), r.config.ExcludeLabels, r.config.LabelsDedot, r.config.UseRegex)
+		labelMaptoExclude = generateMapSubset(accessor.GetLabels(), r.config.ExcludeLabels, r.config.LabelsDedot, r.config.UseRegexExclude)
 	}
 
 	// Exclude any labels that are present in the exclude_labels config
@@ -120,7 +120,7 @@ func (r *Resource) GenerateK8s(kind string, obj kubernetes.Resource, options ...
 		_ = labelMap.Delete(label)
 	}
 
-	annotationsMap := generateMapSubset(accessor.GetAnnotations(), r.config.IncludeAnnotations, r.config.AnnotationsDedot, r.config.UseRegex)
+	annotationsMap := generateMapSubset(accessor.GetAnnotations(), r.config.IncludeAnnotations, r.config.AnnotationsDedot, r.config.UseRegexInclude)
 
 	meta := mapstr.M{
 		strings.ToLower(kind): mapstr.M{

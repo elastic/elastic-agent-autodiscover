@@ -350,4 +350,14 @@ func Test_generateMapSubset(t *testing.T) {
 	output6 := generateMapSubset(Labelsdedot, key6, true, true)
 	assert.Equal(t, expectedresult6, output6)
 
+	//Default code, UsegexInclude=false  Validation
+	key7 := []string{
+		"app.kubernetes.io/name",
+	}
+	expectedresult7 := mapstr.M{
+		"app_kubernetes_io/name": "no",
+	}
+	output7 := generateMapSubset(Labelsdedot, key7, true, false)
+	assert.Equal(t, expectedresult7, output7)
+
 }
