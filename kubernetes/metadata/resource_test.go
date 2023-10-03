@@ -295,7 +295,7 @@ func Test_generateMapSubset(t *testing.T) {
 		"simplefo-example": "simplefo-example1",
 	}
 
-	output1 := generateMapSubset(Labels, key1, false)
+	output1 := generateMapSubset(Labels, key1, false, true)
 
 	//Validating ?
 	key2 := []string{
@@ -304,7 +304,7 @@ func Test_generateMapSubset(t *testing.T) {
 	expectedresult2 := mapstr.M{
 		"foo1": "bar1",
 	}
-	output2 := generateMapSubset(Labels, key2, false)
+	output2 := generateMapSubset(Labels, key2, false, true)
 
 	//Validating start of a string
 	key3 := []string{
@@ -313,7 +313,7 @@ func Test_generateMapSubset(t *testing.T) {
 	expectedresult3 := mapstr.M{
 		"test": "test1",
 	}
-	output3 := generateMapSubset(Labels, key3, false)
+	output3 := generateMapSubset(Labels, key3, false, true)
 
 	//Validating end of a string
 	key4 := []string{
@@ -323,7 +323,7 @@ func Test_generateMapSubset(t *testing.T) {
 		"test":    "test1",
 		"footest": "footest1",
 	}
-	output4 := generateMapSubset(Labels, key4, false)
+	output4 := generateMapSubset(Labels, key4, false, true)
 
 	//Exact matches
 	key5 := []string{
@@ -332,7 +332,7 @@ func Test_generateMapSubset(t *testing.T) {
 	expectedresult5 := mapstr.M{
 		"nottomatch": "no",
 	}
-	output5 := generateMapSubset(Labels, key5, false)
+	output5 := generateMapSubset(Labels, key5, false, true)
 
 	assert.Equal(t, expectedresult1, output1)
 	assert.Equal(t, expectedresult2, output2)
@@ -347,7 +347,7 @@ func Test_generateMapSubset(t *testing.T) {
 	expectedresult6 := mapstr.M{
 		"app_kubernetes_io/name": "no",
 	}
-	output6 := generateMapSubset(Labelsdedot, key6, true)
+	output6 := generateMapSubset(Labelsdedot, key6, true, true)
 	assert.Equal(t, expectedresult6, output6)
 
 }

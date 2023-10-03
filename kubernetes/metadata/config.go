@@ -23,7 +23,9 @@ import (
 
 // Config declares supported configuration for metadata generation
 type Config struct {
-	KubeConfig         string   `config:"kube_config"`
+	KubeConfig string `config:"kube_config"`
+
+	UseRegex           bool     `config:"use_regex"`
 	IncludeLabels      []string `config:"include_labels"`
 	ExcludeLabels      []string `config:"exclude_labels"`
 	IncludeAnnotations []string `config:"include_annotations"`
@@ -44,6 +46,7 @@ type AddResourceMetadataConfig struct {
 func (c *Config) InitDefaults() {
 	c.LabelsDedot = true
 	c.AnnotationsDedot = true
+	c.UseRegex = false
 }
 
 // Unmarshal unpacks a Config into the metagen Config
