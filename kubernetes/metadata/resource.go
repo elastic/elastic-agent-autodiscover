@@ -181,17 +181,20 @@ func generateMapSubset(input map[string]string, keys []string, dedot bool, usere
 	for _, key := range keys {
 		//This is the part where use_regex is enabled
 		if useregex {
-			for label, value := range input {
-				matched, _ := regexp.MatchString(key, label)
-				if matched {
-					if dedot {
-						dedotKey := utils.DeDot(label)
-						_, _ = output.Put(dedotKey, value)
-					} else {
-						_ = safemapstr.Put(output, label, value)
+			pattern, err := regexp.Compile(key)
+			if err == nil {
+				for label, value := range input {
+					matched := pattern.MatchString(label)
+					if matched {
+						if dedot {
+							dedotKey := utils.DeDot(label)
+							_, _ = output.Put(dedotKey, value)
+						} else {
+							_ = safemapstr.Put(output, label, value)
+						}
 					}
-				}
 
+				}
 			}
 		} else {
 			value, ok := input[key]
