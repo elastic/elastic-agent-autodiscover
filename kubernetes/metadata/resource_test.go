@@ -280,84 +280,87 @@ func Test_generateMapSubset(t *testing.T) {
 		"footest":          "footest1",
 		"simplefo-example": "simplefo-example1",
 	}
-	//Validating wildcards
-	key1 := []string{
-		"foo*",
-		"test",
-	}
-	expectedresult1 := mapstr.M{
-		"foo":              "bar",
-		"foo1":             "bar1",
-		"foo2":             "bar2",
-		"foo-example":      "bar-example",
-		"test":             "test1",
-		"footest":          "footest1",
-		"simplefo-example": "simplefo-example1",
+
+	tests := []struct {
+		name           string
+		key            []string
+		expectedresult mapstr.M
+	}{
+		{name: "Validating wildcards",
+			key: []string{
+				"foo*",
+				"test",
+			},
+			expectedresult: mapstr.M{
+				"foo":              "bar",
+				"foo1":             "bar1",
+				"foo2":             "bar2",
+				"foo-example":      "bar-example",
+				"test":             "test1",
+				"footest":          "footest1",
+				"simplefo-example": "simplefo-example1",
+			},
+		},
+		{
+			name: "Validating ?",
+			key: []string{
+				"0?1",
+			},
+			expectedresult: mapstr.M{
+				"foo1": "bar1",
+			},
+		}, {
+			name: "Validating start of a string",
+			key: []string{
+				"^test",
+			},
+			expectedresult: mapstr.M{
+				"test": "test1",
+			},
+		}, {
+			name: "Validating end of a string",
+			key: []string{
+				"test$",
+			},
+			expectedresult: mapstr.M{
+				"test":    "test1",
+				"footest": "footest1",
+			},
+		}, {
+			name: "Exact matches",
+			key: []string{
+				"t{2}",
+			},
+			expectedresult: mapstr.M{
+				"nottomatch": "no",
+			},
+		}, {name: "	//Dedot Validation",
+			key: []string{
+				"app.kubernetes.io",
+			},
+			expectedresult: mapstr.M{
+				"app_kubernetes_io/name": "no",
+			},
+		},
+		{name: "Default code, UsegexInclude=false  Validation",
+			key: []string{
+				"app.kubernetes.io/name",
+			},
+			expectedresult: mapstr.M{
+				"app_kubernetes_io/name": "no",
+			},
+		},
 	}
 
-	output1 := generateMapSubset(Labels, key1, false, true)
+	for i := 0; i <= 4; i++ {
+		output := generateMapSubset(Labels, tests[i].key, false, true)
+		assert.Equal(t, tests[i].expectedresult, output)
+	}
 
-	//Validating ?
-	key2 := []string{
-		"0?1",
-	}
-	expectedresult2 := mapstr.M{
-		"foo1": "bar1",
-	}
-	output2 := generateMapSubset(Labels, key2, false, true)
+	output := generateMapSubset(Labelsdedot, tests[5].key, true, true)
+	assert.Equal(t, tests[5].expectedresult, output)
 
-	//Validating start of a string
-	key3 := []string{
-		"^test",
-	}
-	expectedresult3 := mapstr.M{
-		"test": "test1",
-	}
-	output3 := generateMapSubset(Labels, key3, false, true)
-
-	//Validating end of a string
-	key4 := []string{
-		"test$",
-	}
-	expectedresult4 := mapstr.M{
-		"test":    "test1",
-		"footest": "footest1",
-	}
-	output4 := generateMapSubset(Labels, key4, false, true)
-
-	//Exact matches
-	key5 := []string{
-		"t{2}",
-	}
-	expectedresult5 := mapstr.M{
-		"nottomatch": "no",
-	}
-	output5 := generateMapSubset(Labels, key5, false, true)
-
-	assert.Equal(t, expectedresult1, output1)
-	assert.Equal(t, expectedresult2, output2)
-	assert.Equal(t, expectedresult3, output3)
-	assert.Equal(t, expectedresult4, output4)
-	assert.Equal(t, expectedresult5, output5)
-
-	//Dedot Validation
-	key6 := []string{
-		"app.kubernetes.io",
-	}
-	expectedresult6 := mapstr.M{
-		"app_kubernetes_io/name": "no",
-	}
-	output6 := generateMapSubset(Labelsdedot, key6, true, true)
-	assert.Equal(t, expectedresult6, output6)
-
-	//Default code, UsegexInclude=false  Validation
-	key7 := []string{
-		"app.kubernetes.io/name",
-	}
-	expectedresult7 := mapstr.M{
-		"app_kubernetes_io/name": "no",
-	}
-	output7 := generateMapSubset(Labelsdedot, key7, true, false)
-	assert.Equal(t, expectedresult7, output7)
+	output = generateMapSubset(Labelsdedot, tests[6].key, true, false)
+	assert.Equal(t, tests[6].expectedresult, output)
 
 }
