@@ -300,8 +300,7 @@ func Test_generateMapSubset(t *testing.T) {
 				"footest":          "footest1",
 				"simplefo-example": "simplefo-example1",
 			},
-		},
-		{
+		}, {
 			name: "Validating ?",
 			key: []string{
 				"0?1",
@@ -334,15 +333,16 @@ func Test_generateMapSubset(t *testing.T) {
 			expectedresult: mapstr.M{
 				"nottomatch": "no",
 			},
-		}, {name: "	//Dedot Validation",
+		}, {
+			name: "	//Dedot Validation",
 			key: []string{
 				"app.kubernetes.io",
 			},
 			expectedresult: mapstr.M{
 				"app_kubernetes_io/name": "no",
 			},
-		},
-		{name: "Default code, UsegexInclude=false  Validation",
+		}, {
+			name: "Default code, UsegexInclude=false  Validation",
 			key: []string{
 				"app.kubernetes.io/name",
 			},
