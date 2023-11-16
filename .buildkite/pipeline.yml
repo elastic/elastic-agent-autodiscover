@@ -34,7 +34,7 @@ steps:
 
   - label: ":macos: Tests on MacOS"
     key: mac-test
-    command: ".buildkite/scripts/junit-mac-report.xml.sh"
+    command: ".buildkite/scripts/run-linux-tests.sh junit-mac-report.xml"
     agents:
       provider: "orka"
       imagePrefix: generic-13-ventura-x64
