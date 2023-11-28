@@ -169,6 +169,10 @@ func removeUnnecessaryPodData(pod *v1.Pod) *v1.Pod {
 			APIVersion: pod.APIVersion,
 		},
 		ObjectMeta: pod.ObjectMeta,
+		Spec: v1.PodSpec{
+			NodeName: pod.Spec.NodeName,
+		},
+		Status: v1.PodStatus{PodIP: pod.Status.PodIP},
 	}
 
 	return transformernode
