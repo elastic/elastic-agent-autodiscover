@@ -18,6 +18,8 @@
 package metadata
 
 import (
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
@@ -84,9 +86,12 @@ func (p *pod) GenerateECS(obj kubernetes.Resource) mapstr.M {
 
 // GenerateK8s generates pod metadata from a resource object
 func (p *pod) GenerateK8s(obj kubernetes.Resource, opts ...FieldOptions) mapstr.M {
-	po, ok := obj.(*kubernetes.Pod)
+	var po *v1.Pod
+	originalPod, ok := obj.(*kubernetes.Pod)
 	if !ok {
 		return nil
+	} else {
+		po = removeUnnecessaryPodData(originalPod)
 	}
 
 	out := p.resource.GenerateK8s("pod", obj, opts...)
@@ -155,4 +160,16 @@ func (p *pod) GenerateFromName(name string, opts ...FieldOptions) mapstr.M {
 	}
 
 	return nil
+}
+
+func removeUnnecessaryPodData(pod *v1.Pod) *v1.Pod {
+	transformernode := &v1.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       pod.Kind,
+			APIVersion: pod.APIVersion,
+		},
+		ObjectMeta: pod.ObjectMeta,
+	}
+
+	return transformernode
 }
