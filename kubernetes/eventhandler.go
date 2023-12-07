@@ -18,23 +18,27 @@
 package kubernetes
 
 import (
+	"reflect"
 	"sync"
+
+	"github.com/elastic/elastic-agent-libs/logp"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
 // resource. The events are informational only, so you can't return an
 // error.
-//  * OnAdd is called when an object is added.
-//  * OnUpdate is called when an object is modified. Note that oldObj is the
-//      last known state of the object-- it is possible that several changes
-//      were combined together, so you can't use this to see every single
-//      change. OnUpdate is also called when a re-list happens, and it will
-//      get called even if nothing changed. This is useful for periodically
-//      evaluating or syncing something.
-//  * OnDelete will get the final state of the item if it is known, otherwise
-//      it will get an object of type DeletedFinalStateUnknown. This can
-//      happen if the watch is closed and misses the delete event and we don't
-//      notice the deletion until the subsequent re-list.
+//   - OnAdd is called when an object is added.
+//   - OnUpdate is called when an object is modified. Note that oldObj is the
+//     last known state of the object-- it is possible that several changes
+//     were combined together, so you can't use this to see every single
+//     change. OnUpdate is also called when a re-list happens, and it will
+//     get called even if nothing changed. This is useful for periodically
+//     evaluating or syncing something.
+//   - OnDelete will get the final state of the item if it is known, otherwise
+//     it will get an object of type DeletedFinalStateUnknown. This can
+//     happen if the watch is closed and misses the delete event and we don't
+//     notice the deletion until the subsequent re-list.
+//
 // idea: allow the On* methods to return an error so that the RateLimited WorkQueue
 // idea: can requeue the failed event processing.
 type ResourceEventHandler interface {
@@ -134,6 +138,12 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
+// NodeStore is the interface that an object needs to implement to be
+// used as a node shared store.
+type NodeStore interface {
+	List() []interface{}
+}
+
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
 type namespacePodUpdater struct {
 	handler podUpdaterHandlerFunc
@@ -184,17 +194,19 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 
 // nodePodUpdater notifies updates on pods when their nodes are updated.
 type nodePodUpdater struct {
-	handler podUpdaterHandlerFunc
-	store   podUpdaterStore
-	locker  sync.Locker
+	handler   podUpdaterHandlerFunc
+	store     podUpdaterStore
+	nodestore NodeStore
+	locker    sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodestore NodeStore, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
-		handler: handler,
-		store:   store,
-		locker:  locker,
+		handler:   handler,
+		store:     store,
+		nodestore: nodestore,
+		locker:    locker,
 	}
 }
 
@@ -205,6 +217,9 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		return
 	}
 
+	log := logp.NewLogger("NodeWatcherPas")
+	log.Errorf("ChangeNode: %v", node)
+
 	// n.store.List() returns a snapshot at this point. If a delete is received
 	// from the main watcher, this loop may generate an update event after the
 	// delete is processed, leaving configurations that would never be deleted.
@@ -214,9 +229,20 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
+	labelscheck := true
+	annotationscheck := true
+	for _, nodes := range n.nodestore.List() {
+		nodes, ok := nodes.(*Node)
+		if ok && node.Name == nodes.Name {
+			labelscheck = reflect.DeepEqual(node.ObjectMeta.Labels, nodes.ObjectMeta.Labels)
+			annotationscheck = reflect.DeepEqual(node.ObjectMeta.Annotations, nodes.ObjectMeta.Annotations)
+		}
+	}
 	for _, pod := range n.store.List() {
+		log.Errorf("PodtoCheck %v", pod)
+
 		pod, ok := pod.(*Pod)
-		if ok && pod.Spec.NodeName == node.Name {
+		if ok && pod.Spec.NodeName == node.Name && (!labelscheck || !annotationscheck) {
 			n.handler(pod)
 		}
 	}
