@@ -139,7 +139,7 @@ type podUpdaterStore interface {
 }
 
 // NodeStore is the interface that an object needs to implement to be
-// used as a node shared store.
+// used as a namespace shared store.
 type NamespaceStore interface {
 	GetByKey(string) (interface{}, bool, error)
 }
@@ -168,6 +168,7 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
+	// https://pkg.go.dev/k8s.io/client-go/tools/cache#MetaNamespaceKeyFunc Creates key from provided obj
 	key, _ := cache.MetaNamespaceKeyFunc(obj)
 
 	if n.locker != nil {
@@ -240,7 +241,7 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
-
+	// https://pkg.go.dev/k8s.io/client-go/tools/cache#MetaNamespaceKeyFunc Creates key from provided obj
 	key, _ := cache.MetaNamespaceKeyFunc(obj)
 
 	if n.locker != nil {
