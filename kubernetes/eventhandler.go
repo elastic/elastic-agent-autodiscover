@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/elastic/elastic-agent-libs/logp"
+	"k8s.io/client-go/tools/cache"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
@@ -141,7 +141,7 @@ type podUpdaterStore interface {
 // NodeStore is the interface that an object needs to implement to be
 // used as a node shared store.
 type NodeStore interface {
-	List() []interface{}
+	GetByKey(string) (interface{}, bool, error)
 }
 
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
@@ -217,8 +217,9 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		return
 	}
 
-	log := logp.NewLogger("NodeWatcherPas")
-	log.Errorf("ChangeNode: %v", node)
+	key, _ := cache.MetaNamespaceKeyFunc(obj)
+	//Trying to retrieve from the cache. Get returns the accumulator associated with the given object's key
+	cachednodeobj, exists, err := n.nodestore.GetByKey(key)
 
 	// n.store.List() returns a snapshot at this point. If a delete is received
 	// from the main watcher, this loop may generate an update event after the
@@ -231,19 +232,20 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	}
 	labelscheck := true
 	annotationscheck := true
-	for _, nodes := range n.nodestore.List() {
-		nodes, ok := nodes.(*Node)
-		if ok && node.Name == nodes.Name {
-			labelscheck = reflect.DeepEqual(node.ObjectMeta.Labels, nodes.ObjectMeta.Labels)
-			annotationscheck = reflect.DeepEqual(node.ObjectMeta.Annotations, nodes.ObjectMeta.Annotations)
+	if err == nil && exists {
+		cachednode, ok := cachednodeobj.(*Node)
+		if ok {
+			labelscheck = reflect.DeepEqual(node.ObjectMeta.Labels, cachednode.ObjectMeta.Labels)
+			annotationscheck = reflect.DeepEqual(node.ObjectMeta.Annotations, cachednode.ObjectMeta.Annotations)
 		}
 	}
-	for _, pod := range n.store.List() {
-		log.Errorf("PodtoCheck %v", pod)
-
-		pod, ok := pod.(*Pod)
-		if ok && pod.Spec.NodeName == node.Name && (!labelscheck || !annotationscheck) {
-			n.handler(pod)
+	// Only if an update happend either in Labels or Annotations proceed with Pod updates
+	if !labelscheck || !annotationscheck {
+		for _, pod := range n.store.List() {
+			pod, ok := pod.(*Pod)
+			if ok && pod.Spec.NodeName == node.Name {
+				n.handler(pod)
+			}
 		}
 	}
 }
