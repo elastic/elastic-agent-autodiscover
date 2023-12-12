@@ -59,6 +59,9 @@ type Watcher interface {
 
 	// Client returns the kubernetes client object used by the watcher
 	Client() kubernetes.Interface
+
+	// Delta returns the slice of objects changed by the last updated event
+	Deltaslice() []runtime.Object
 }
 
 // WatchOptions controls watch behaviors
@@ -91,6 +94,7 @@ type watcher struct {
 	stop     context.CancelFunc
 	handler  ResourceEventHandler
 	logger   *logp.Logger
+	delta    []runtime.Object
 }
 
 // NewWatcher initializes the watcher client to provide a events handler for
@@ -106,7 +110,7 @@ func NewWatcher(client kubernetes.Interface, resource Resource, opts WatchOption
 func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource, opts WatchOptions, indexers cache.Indexers) (Watcher, error) {
 	var store cache.Store
 	var queue workqueue.Interface
-
+	var deltaslice []runtime.Object
 	informer, _, err := NewInformer(client, resource, opts, indexers)
 	if err != nil {
 		return nil, err
@@ -132,6 +136,7 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 		store:    store,
 		queue:    queue,
 		ctx:      ctx,
+		delta:    deltaslice,
 		stop:     cancel,
 		logger:   logp.NewLogger("kubernetes"),
 		handler:  NoOpEventHandlerFuncs{},
@@ -157,6 +162,8 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 				// state should just be deduped by autodiscover and not stop/started periodically as would be the case with an update.
 				w.enqueue(n, add)
 			}
+			w.deltaslice(o, n)
+
 		},
 	})
 
@@ -176,6 +183,11 @@ func (w *watcher) Store() cache.Store {
 // Client returns the kubernetes client object used by the watcher
 func (w *watcher) Client() kubernetes.Interface {
 	return w.client
+}
+
+// Client returns the kubernetes client object used by the watcher
+func (w *watcher) Deltaslice() []runtime.Object {
+	return w.delta
 }
 
 // Start watching pods
@@ -215,6 +227,13 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 		obj = deleted.Obj
 	}
 	w.queue.Add(&item{key, obj, state})
+}
+
+func (w *watcher) deltaslice(o interface{}, n interface{}) {
+	w.delta = w.delta[:0]
+	w.delta = append(w.delta, o.(runtime.Object))
+	w.delta = append(w.delta, n.(runtime.Object))
+
 }
 
 // process gets the top of the work queue and processes the object that is received.
