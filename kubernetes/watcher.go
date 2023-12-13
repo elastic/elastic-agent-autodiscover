@@ -185,7 +185,7 @@ func (w *watcher) Client() kubernetes.Interface {
 	return w.client
 }
 
-// Client returns the kubernetes client object used by the watcher
+// Deltaobjects returns the slice of objects that change during the last updated event
 func (w *watcher) Deltaobjects() []runtime.Object {
 	return w.delta
 }
