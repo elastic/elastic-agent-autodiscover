@@ -60,8 +60,8 @@ type Watcher interface {
 	// Client returns the kubernetes client object used by the watcher
 	Client() kubernetes.Interface
 
-	// Delta returns the slice of objects changed by the last updated event
-	Deltaslice() []runtime.Object
+	// Deltaobjects returns the slice of objects that change during the last updated event
+	Deltaobjects() []runtime.Object
 }
 
 // WatchOptions controls watch behaviors
@@ -162,7 +162,7 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 				// state should just be deduped by autodiscover and not stop/started periodically as would be the case with an update.
 				w.enqueue(n, add)
 			}
-			w.deltaslice(o, n)
+			w.deltaobjects(o, n)
 
 		},
 	})
@@ -186,7 +186,7 @@ func (w *watcher) Client() kubernetes.Interface {
 }
 
 // Client returns the kubernetes client object used by the watcher
-func (w *watcher) Deltaslice() []runtime.Object {
+func (w *watcher) Deltaobjects() []runtime.Object {
 	return w.delta
 }
 
@@ -229,7 +229,10 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 	w.queue.Add(&item{key, obj, state})
 }
 
-func (w *watcher) deltaslice(o interface{}, n interface{}) {
+// deltaobjects creates a slice with the old and the new version of cache objects that are ready to chane on update events
+// returns a delta struct to the watcher. w.delta[0] is the old version and w.delta[1] the new updated one
+func (w *watcher) deltaobjects(o interface{}, n interface{}) {
+	//w.delta[:0] initialises always the delta struct before new assignement
 	w.delta = w.delta[:0]
 	w.delta = append(w.delta, o.(runtime.Object))
 	w.delta = append(w.delta, n.(runtime.Object))

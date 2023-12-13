@@ -23,7 +23,6 @@ import (
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/cache"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
@@ -140,33 +139,25 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
-// NodeStore is the interface that an object needs to implement to be
-// used as a namespace shared store.
-type NamespaceStore interface {
-	GetByKey(string) (interface{}, bool, error)
-}
-
-type NamespaceDelta interface {
-	Deltaslice() []runtime.Object
+type UpdateWatcher interface {
+	Deltaobjects() []runtime.Object
 }
 
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
 type namespacePodUpdater struct {
-	handler        podUpdaterHandlerFunc
-	store          podUpdaterStore
-	namespacestore NamespaceStore
-	namespacedelta NamespaceDelta
-	locker         sync.Locker
+	handler          podUpdaterHandlerFunc
+	store            podUpdaterStore
+	namespacewatcher UpdateWatcher
+	locker           sync.Locker
 }
 
 // NewNamespacePodUpdater creates a namespacePodUpdater
-func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespacestore NamespaceStore, namespacedelta NamespaceDelta, locker sync.Locker) *namespacePodUpdater {
+func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespacewatcher UpdateWatcher, locker sync.Locker) *namespacePodUpdater {
 	return &namespacePodUpdater{
-		handler:        handler,
-		store:          store,
-		namespacestore: namespacestore,
-		namespacedelta: namespacedelta,
-		locker:         locker,
+		handler:          handler,
+		store:            store,
+		namespacewatcher: namespacewatcher,
+		locker:           locker,
 	}
 }
 
@@ -176,46 +167,33 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
-	// https://pkg.go.dev/k8s.io/client-go/tools/cache#MetaNamespaceKeyFunc Creates key from provided obj
-	key, _ := cache.MetaNamespaceKeyFunc(obj)
 	lognode := logp.NewLogger("--------Namespace---------")
 
 	if n.locker != nil {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	//Trying to retrieve from the cache. Getbykey returns the object from cache associated with the given object's key
 
-	cachednamespaceobj, exists, err := n.namespacestore.GetByKey(key)
-	slice := n.namespacedelta.Deltaslice()
+	// Slice includes the old and new version of caching object that changes in the current update event. slice[0] is the old version and slice[1] the new updated one
+	slice := n.namespacewatcher.Deltaobjects()
+	cachednamespaceold, ok := slice[0].(*Namespace)
+
 	lognode.Infof("-----Slice-------->: %v,  %v ", slice[0], slice[1])
 
-	labelscheck := true
-	annotationscheck := true
-	if err == nil && exists {
-		cachednamespace, ok := cachednamespaceobj.(*Namespace)
-		cachednamespaceold, ok := slice[0].(*Namespace)
-		if ns.Name == cachednamespace.Name {
-			labelscheck = reflect.DeepEqual(cachednamespace.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
-			annotationscheck = reflect.DeepEqual(cachednamespace.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
-			if ok {
-				// n.store.List() returns a snapshot at this point. If a delete is received
-				// from the main watcher, this loop may generate an update event after the
-				// delete is processed, leaving configurations that would never be deleted.
-				// Also this loop can miss updates, what could leave outdated configurations.
-				// Avoid these issues by locking the processing of events from the main watcher.
-				for _, pod := range n.store.List() {
-					pod, ok := pod.(*Pod)
-
-					if ok && pod.Namespace == cachednamespace.Name {
-						// Only if an update happend either in Labels or Annotations proceed with Pod updates
-						lognode.Infof("-----Values-------->: %v,  %v ", pod.Namespace, cachednamespace.Name)
-						lognode.Infof("------Checks------->: %v,  %v ", labelscheck, annotationscheck)
-						lognode.Infof("------Labels------->: %v,  %v ", cachednamespace.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
-						if !labelscheck || !annotationscheck {
-							n.handler(pod)
-						}
-					}
+	if ns.Name == cachednamespaceold.Name && ok {
+		labelscheck := checkMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
+		annotationscheck := checkMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
+		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+		if !labelscheck || !annotationscheck {
+			// n.store.List() returns a snapshot at this point. If a delete is received
+			// from the main watcher, this loop may generate an update event after the
+			// delete is processed, leaving configurations that would never be deleted.
+			// Also this loop can miss updates, what could leave outdated configurations.
+			// Avoid these issues by locking the processing of events from the main watcher.
+			for _, pod := range n.store.List() {
+				pod, ok := pod.(*Pod)
+				if ok && pod.Namespace == ns.Name {
+					n.handler(pod)
 				}
 			}
 		}
@@ -233,25 +211,19 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 
 // nodePodUpdater notifies updates on pods when their nodes are updated.
 type nodePodUpdater struct {
-	handler   podUpdaterHandlerFunc
-	store     podUpdaterStore
-	nodestore NodeStore
-	locker    sync.Locker
-}
-
-// NodeStore is the interface that an object needs to implement to be
-// used as a node shared store.
-type NodeStore interface {
-	GetByKey(string) (interface{}, bool, error)
+	handler     podUpdaterHandlerFunc
+	store       podUpdaterStore
+	nodewatcher UpdateWatcher
+	locker      sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodestore NodeStore, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodewatcher UpdateWatcher, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
-		handler:   handler,
-		store:     store,
-		nodestore: nodestore,
-		locker:    locker,
+		handler:     handler,
+		store:       store,
+		nodewatcher: nodewatcher,
+		locker:      locker,
 	}
 }
 
@@ -261,38 +233,29 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
-	// https://pkg.go.dev/k8s.io/client-go/tools/cache#MetaNamespaceKeyFunc Creates key from provided obj
-	key, _ := cache.MetaNamespaceKeyFunc(obj)
-	lognode := logp.NewLogger("--------Node---------")
 
 	if n.locker != nil {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	//Trying to retrieve from the cache. Getbykey returns the object from cache associated with the given object's key
-	cachednodeobj, exists, err := n.nodestore.GetByKey(key)
+	slice := n.nodewatcher.Deltaobjects()
+	cachednodeold, ok := slice[0].(*Node)
 
-	labelscheck := true
-	annotationscheck := true
-	if err == nil && exists {
-		cachednode, ok := cachednodeobj.(*Node)
-		lognode.Infof("Node: %v .", cachednode.Labels)
-		if ok {
-			labelscheck = reflect.DeepEqual(node.ObjectMeta.Labels, cachednode.Labels)
-			annotationscheck = reflect.DeepEqual(node.ObjectMeta.Annotations, cachednode.Annotations)
-		}
-	}
-	// Only if an update happend either in Labels or Annotations proceed with Pod updates
-	if !labelscheck || !annotationscheck {
-		// n.store.List() returns a snapshot at this point. If a delete is received
-		// from the main watcher, this loop may generate an update event after the
-		// delete is processed, leaving configurations that would never be deleted.
-		// Also this loop can miss updates, what could leave outdated configurations.
-		// Avoid these issues by locking the processing of events from the main watcher.
-		for _, pod := range n.store.List() {
-			pod, ok := pod.(*Pod)
-			if ok && pod.Spec.NodeName == node.Name {
-				n.handler(pod)
+	if node.Name == cachednodeold.Name && ok {
+		labelscheck := checkMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)
+		annotationscheck := checkMetadata(node.ObjectMeta.Annotations, cachednodeold.ObjectMeta.Annotations)
+		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+		if !labelscheck || !annotationscheck {
+			// n.store.List() returns a snapshot at this point. If a delete is received
+			// from the main watcher, this loop may generate an update event after the
+			// delete is processed, leaving configurations that would never be deleted.
+			// Also this loop can miss updates, what could leave outdated configurations.
+			// Avoid these issues by locking the processing of events from the main watcher.
+			for _, pod := range n.store.List() {
+				pod, ok := pod.(*Pod)
+				if ok && pod.Spec.NodeName == node.Name {
+					n.handler(pod)
+				}
 			}
 		}
 	}
@@ -305,3 +268,9 @@ func (*nodePodUpdater) OnAdd(interface{}) {}
 // OnDelete handles delete events on namespaces. Nothing to do, if pods are deleted from this
 // namespace they will generate their own delete events.
 func (*nodePodUpdater) OnDelete(interface{}) {}
+
+// checkMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrenece
+func checkMetadata(newmetadata, oldmetadata map[string]string) bool {
+	check := reflect.DeepEqual(newmetadata, oldmetadata)
+	return check
+}
