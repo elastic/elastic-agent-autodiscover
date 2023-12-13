@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -167,7 +166,6 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
-	lognode := logp.NewLogger("--------Namespace---------")
 
 	if n.locker != nil {
 		n.locker.Lock()
@@ -177,8 +175,6 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	// Slice includes the old and new version of caching object that changes in the current update event. slice[0] is the old version and slice[1] the new updated one
 	slice := n.namespacewatcher.Deltaobjects()
 	cachednamespaceold, ok := slice[0].(*Namespace)
-
-	lognode.Infof("-----Slice-------->: %v,  %v ", slice[0], slice[1])
 
 	if ns.Name == cachednamespaceold.Name && ok {
 		labelscheck := checkMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
@@ -238,6 +234,8 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
+
+	// Slice includes the old and new version of caching object that changes in the current update event. slice[0] is the old version and slice[1] the new updated one
 	slice := n.nodewatcher.Deltaobjects()
 	cachednodeold, ok := slice[0].(*Node)
 
