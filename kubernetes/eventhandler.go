@@ -267,7 +267,7 @@ func (*nodePodUpdater) OnAdd(interface{}) {}
 // namespace they will generate their own delete events.
 func (*nodePodUpdater) OnDelete(interface{}) {}
 
-// checkMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrenece
+// checkMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrence
 func checkMetadata(newmetadata, oldmetadata map[string]string) bool {
 	check := reflect.DeepEqual(newmetadata, oldmetadata)
 	return check
