@@ -20,6 +20,8 @@ package kubernetes
 import (
 	"reflect"
 	"sync"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
@@ -139,7 +141,7 @@ type podUpdaterStore interface {
 // UpdateWatcher is the interface  that an object needs to implement to be
 // able to use DeltaObject cache event function.
 type UpdateWatcher interface {
-	Deltaobjects() Delta
+	Oldobject() runtime.Object
 }
 
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
@@ -176,11 +178,8 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-
-	// deltaobjects includes the old and new version of caching object that changes in the current update event.
-	// We compare the cached old version of object with the new one that triggers the update
-	deltaobjects := n.namespacewatcher.Deltaobjects()
-	cachednamespaceold, ok := deltaobjects.old.(*Namespace)
+	oldobject := n.namespacewatcher.Oldobject()
+	cachednamespaceold, ok := oldobject.(*Namespace)
 
 	if ok && ns.Name == cachednamespaceold.Name {
 		labelscheck := isEqualMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
@@ -240,11 +239,8 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-
-	// deltaobjects includes the old and new version of caching object that changes in the current update event.
-	// We compare the cached old version of object with the new one that triggers the update
-	deltaobjects := n.nodewatcher.Deltaobjects()
-	cachednodeold, ok := deltaobjects.old.(*Node)
+	oldobject := n.nodewatcher.Oldobject()
+	cachednodeold, ok := oldobject.(*Node)
 
 	if ok && node.Name == cachednodeold.Name {
 		labelscheck := isEqualMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)

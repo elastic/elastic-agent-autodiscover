@@ -60,8 +60,8 @@ type Watcher interface {
 	// Client returns the kubernetes client object used by the watcher
 	Client() kubernetes.Interface
 
-	// Deltaobjects returns the objects struct that change during the last updated event
-	Deltaobjects() Delta
+	// Oldobject returns the old object before change during the last updated event
+	Oldobject() runtime.Object
 }
 
 // WatchOptions controls watch behaviors
@@ -85,21 +85,16 @@ type item struct {
 	state     string
 }
 
-type Delta struct {
-	old runtime.Object
-	new runtime.Object
-}
-
 type watcher struct {
-	client   kubernetes.Interface
-	informer cache.SharedInformer
-	store    cache.Store
-	queue    workqueue.Interface
-	ctx      context.Context
-	stop     context.CancelFunc
-	handler  ResourceEventHandler
-	logger   *logp.Logger
-	delta    Delta
+	client    kubernetes.Interface
+	informer  cache.SharedInformer
+	store     cache.Store
+	queue     workqueue.Interface
+	ctx       context.Context
+	stop      context.CancelFunc
+	handler   ResourceEventHandler
+	logger    *logp.Logger
+	oldobject runtime.Object
 }
 
 // NewWatcher initializes the watcher client to provide a events handler for
@@ -115,7 +110,7 @@ func NewWatcher(client kubernetes.Interface, resource Resource, opts WatchOption
 func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource, opts WatchOptions, indexers cache.Indexers) (Watcher, error) {
 	var store cache.Store
 	var queue workqueue.Interface
-	var delta Delta
+	var oldobject runtime.Object
 	informer, _, err := NewInformer(client, resource, opts, indexers)
 	if err != nil {
 		return nil, err
@@ -136,15 +131,15 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	w := &watcher{
-		client:   client,
-		informer: informer,
-		store:    store,
-		queue:    queue,
-		ctx:      ctx,
-		delta:    delta,
-		stop:     cancel,
-		logger:   logp.NewLogger("kubernetes"),
-		handler:  NoOpEventHandlerFuncs{},
+		client:    client,
+		informer:  informer,
+		store:     store,
+		queue:     queue,
+		ctx:       ctx,
+		oldobject: oldobject,
+		stop:      cancel,
+		logger:    logp.NewLogger("kubernetes"),
+		handler:   NoOpEventHandlerFuncs{},
 	}
 
 	w.informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -167,7 +162,7 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 				// state should just be deduped by autodiscover and not stop/started periodically as would be the case with an update.
 				w.enqueue(n, add)
 			}
-			w.deltaobjects(o, n)
+			w.oldobjectreturn(o)
 
 		},
 	})
@@ -190,9 +185,9 @@ func (w *watcher) Client() kubernetes.Interface {
 	return w.client
 }
 
-// Deltaobjects returns the objects struct that change during the last updated event
-func (w *watcher) Deltaobjects() Delta {
-	return w.delta
+// Oldbject returns the old object in cache during the last updated event
+func (w *watcher) Oldobject() runtime.Object {
+	return w.oldobject
 }
 
 // Start watching pods
@@ -234,10 +229,9 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 	w.queue.Add(&item{key, obj, state})
 }
 
-// deltaobjects updates the delta struct with the old and the new version of cache objects that are ready to change on update events
-func (w *watcher) deltaobjects(o interface{}, n interface{}) {
-	w.delta.old = o.(runtime.Object)
-	w.delta.new = n.(runtime.Object)
+// oldobjectreturn returns the old version of cache objects before change on update events
+func (w *watcher) oldobjectreturn(o interface{}) {
+	w.oldobject = o.(runtime.Object)
 }
 
 // process gets the top of the work queue and processes the object that is received.
