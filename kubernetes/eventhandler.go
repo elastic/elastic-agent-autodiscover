@@ -245,7 +245,7 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	if ok && node.Name == cachednodeold.Name {
 		labelscheck := isEqualMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)
 		annotationscheck := isEqualMetadata(node.ObjectMeta.Annotations, cachednodeold.ObjectMeta.Annotations)
-		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {
 				pod, ok := pod.(*Pod)
