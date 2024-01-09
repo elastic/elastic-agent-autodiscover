@@ -164,12 +164,10 @@ func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore
 
 // OnUpdate handles update events on namespaces.
 func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
-
 	ns, ok := obj.(*Namespace)
 	if !ok {
 		return
 	}
-
 	// n.store.List() returns a snapshot at this point. If a delete is received
 	// from the main watcher, this loop may generate an update event after the
 	// delete is processed, leaving configurations that would never be deleted.
@@ -230,7 +228,6 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	if !ok {
 		return
 	}
-
 	// n.store.List() returns a snapshot at this point. If a delete is received
 	// from the main watcher, this loop may generate an update event after the
 	// delete is processed, leaving configurations that would never be deleted.
