@@ -176,7 +176,7 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	slice := n.namespacewatcher.Deltaobjects()
 	cachednamespaceold, ok := slice[0].(*Namespace)
 
-	if ns.Name == cachednamespaceold.Name && ok {
+	if ok && ns.Name == cachednamespaceold.Name {
 		labelscheck := checkMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
 		annotationscheck := checkMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
 		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
