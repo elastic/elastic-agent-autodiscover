@@ -139,7 +139,7 @@ type podUpdaterStore interface {
 }
 
 // UpdateWatcher is the interface  that an object needs to implement to be
-// able to use DeltaObject cache event function.
+// able to use Oldobject cache event function from watcher.
 type UpdateWatcher interface {
 	Oldobject() runtime.Object
 }
