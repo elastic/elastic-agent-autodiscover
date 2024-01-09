@@ -231,7 +231,11 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 
 // oldobjectreturn returns the old version of cache objects before change on update events
 func (w *watcher) oldobjectreturn(o interface{}) {
-	w.oldobject = o.(runtime.Object)
+	if old, ok := o.(runtime.Object); !ok {
+		utilruntime.HandleError(fmt.Errorf("expected object in cache  got %#v", o))
+	} else {
+		w.oldobject = old
+	}
 }
 
 // process gets the top of the work queue and processes the object that is received.
