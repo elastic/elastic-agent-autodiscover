@@ -232,8 +232,7 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 // cacheObject updates watcher with the old version of cache objects before change during update events
 func (w *watcher) cacheObject(o interface{}) {
 	if old, ok := o.(runtime.Object); !ok {
-		w.logger.Debugf("Old Object was not retrieved from cache: %v", o)
-		w.oldobject = nil
+		utilruntime.HandleError(fmt.Errorf("expected object in cache got %#v", o))
 	} else {
 		w.oldobject = old
 	}
