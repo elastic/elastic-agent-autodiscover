@@ -182,10 +182,10 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	deltaobjects := n.namespacewatcher.Deltaobjects()
 	cachednamespaceold, ok := deltaobjects.old.(*Namespace)
 
-	if ns.Name == cachednamespaceold.Name && ok {
+	if ok && ns.Name == cachednamespaceold.Name {
 		labelscheck := isEqualMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
 		annotationscheck := isEqualMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
-		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {
 				pod, ok := pod.(*Pod)
