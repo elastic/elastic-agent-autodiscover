@@ -179,7 +179,7 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	if ns.Name == cachednamespaceold.Name && ok {
 		labelscheck := checkMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
 		annotationscheck := checkMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
-		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			// n.store.List() returns a snapshot at this point. If a delete is received
 			// from the main watcher, this loop may generate an update event after the
