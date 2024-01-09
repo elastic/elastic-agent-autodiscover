@@ -60,8 +60,8 @@ type Watcher interface {
 	// Client returns the kubernetes client object used by the watcher
 	Client() kubernetes.Interface
 
-	// Deltaobjects returns the slice of objects that change during the last updated event
-	Deltaobjects() []runtime.Object
+	// Deltaobjects returns the objects struct that change during the last updated event
+	Deltaobjects() Delta
 }
 
 // WatchOptions controls watch behaviors
@@ -85,6 +85,11 @@ type item struct {
 	state     string
 }
 
+type Delta struct {
+	old runtime.Object
+	new runtime.Object
+}
+
 type watcher struct {
 	client   kubernetes.Interface
 	informer cache.SharedInformer
@@ -94,7 +99,7 @@ type watcher struct {
 	stop     context.CancelFunc
 	handler  ResourceEventHandler
 	logger   *logp.Logger
-	delta    []runtime.Object
+	delta    Delta
 }
 
 // NewWatcher initializes the watcher client to provide a events handler for
@@ -110,7 +115,7 @@ func NewWatcher(client kubernetes.Interface, resource Resource, opts WatchOption
 func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource, opts WatchOptions, indexers cache.Indexers) (Watcher, error) {
 	var store cache.Store
 	var queue workqueue.Interface
-	var deltaslice []runtime.Object
+	var delta Delta
 	informer, _, err := NewInformer(client, resource, opts, indexers)
 	if err != nil {
 		return nil, err
@@ -136,7 +141,7 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 		store:    store,
 		queue:    queue,
 		ctx:      ctx,
-		delta:    deltaslice,
+		delta:    delta,
 		stop:     cancel,
 		logger:   logp.NewLogger("kubernetes"),
 		handler:  NoOpEventHandlerFuncs{},
@@ -185,8 +190,8 @@ func (w *watcher) Client() kubernetes.Interface {
 	return w.client
 }
 
-// Deltaobjects returns the slice of objects that change during the last updated event
-func (w *watcher) Deltaobjects() []runtime.Object {
+// Deltaobjects returns the objects struct that change during the last updated event
+func (w *watcher) Deltaobjects() Delta {
 	return w.delta
 }
 
@@ -229,14 +234,10 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 	w.queue.Add(&item{key, obj, state})
 }
 
-// deltaobjects creates a slice with the old and the new version of cache objects that are ready to chane on update events
-// returns a delta struct to the watcher. w.delta[0] is the old version and w.delta[1] the new updated one
+// deltaobjects updates the delta struct with the old and the new version of cache objects that are ready to change on update events
 func (w *watcher) deltaobjects(o interface{}, n interface{}) {
-	//w.delta[:0] initialises always the delta struct before new assignement
-	w.delta = w.delta[:0]
-	w.delta = append(w.delta, o.(runtime.Object))
-	w.delta = append(w.delta, n.(runtime.Object))
-
+	w.delta.old = o.(runtime.Object)
+	w.delta.new = n.(runtime.Object)
 }
 
 // process gets the top of the work queue and processes the object that is received.

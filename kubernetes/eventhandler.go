@@ -20,8 +20,6 @@ package kubernetes
 import (
 	"reflect"
 	"sync"
-
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
@@ -138,8 +136,10 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
+// UpdateWatcher is the interface  that an object needs to implement to be
+// able to use DeltaObject cache event function.
 type UpdateWatcher interface {
-	Deltaobjects() []runtime.Object
+	Deltaobjects() Delta
 }
 
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
@@ -167,25 +167,26 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 		return
 	}
 
+	// n.store.List() returns a snapshot at this point. If a delete is received
+	// from the main watcher, this loop may generate an update event after the
+	// delete is processed, leaving configurations that would never be deleted.
+	// Also this loop can miss updates, what could leave outdated configurations.
+	// Avoid these issues by locking the processing of events from the main watcher.
 	if n.locker != nil {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
 
-	// Slice includes the old and new version of caching object that changes in the current update event. slice[0] is the old version and slice[1] the new updated one
-	slice := n.namespacewatcher.Deltaobjects()
-	cachednamespaceold, ok := slice[0].(*Namespace)
+	// deltaobjects includes the old and new version of caching object that changes in the current update event.
+	// We compare the cached old version of object with the new one that triggers the update
+	deltaobjects := n.namespacewatcher.Deltaobjects()
+	cachednamespaceold, ok := deltaobjects.old.(*Namespace)
 
 	if ns.Name == cachednamespaceold.Name && ok {
-		labelscheck := checkMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
-		annotationscheck := checkMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
+		labelscheck := isEqualMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
+		annotationscheck := isEqualMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
 		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
-			// n.store.List() returns a snapshot at this point. If a delete is received
-			// from the main watcher, this loop may generate an update event after the
-			// delete is processed, leaving configurations that would never be deleted.
-			// Also this loop can miss updates, what could leave outdated configurations.
-			// Avoid these issues by locking the processing of events from the main watcher.
 			for _, pod := range n.store.List() {
 				pod, ok := pod.(*Pod)
 				if ok && pod.Namespace == ns.Name {
@@ -230,25 +231,26 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		return
 	}
 
+	// n.store.List() returns a snapshot at this point. If a delete is received
+	// from the main watcher, this loop may generate an update event after the
+	// delete is processed, leaving configurations that would never be deleted.
+	// Also this loop can miss updates, what could leave outdated configurations.
+	// Avoid these issues by locking the processing of events from the main watcher.
 	if n.locker != nil {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
 
-	// Slice includes the old and new version of caching object that changes in the current update event. slice[0] is the old version and slice[1] the new updated one
-	slice := n.nodewatcher.Deltaobjects()
-	cachednodeold, ok := slice[0].(*Node)
+	// deltaobjects includes the old and new version of caching object that changes in the current update event.
+	// We compare the cached old version of object with the new one that triggers the update
+	deltaobjects := n.nodewatcher.Deltaobjects()
+	cachednodeold, ok := deltaobjects.old.(*Node)
 
-	if node.Name == cachednodeold.Name && ok {
-		labelscheck := checkMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)
-		annotationscheck := checkMetadata(node.ObjectMeta.Annotations, cachednodeold.ObjectMeta.Annotations)
+	if ok && node.Name == cachednodeold.Name {
+		labelscheck := isEqualMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)
+		annotationscheck := isEqualMetadata(node.ObjectMeta.Annotations, cachednodeold.ObjectMeta.Annotations)
 		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
-			// n.store.List() returns a snapshot at this point. If a delete is received
-			// from the main watcher, this loop may generate an update event after the
-			// delete is processed, leaving configurations that would never be deleted.
-			// Also this loop can miss updates, what could leave outdated configurations.
-			// Avoid these issues by locking the processing of events from the main watcher.
 			for _, pod := range n.store.List() {
 				pod, ok := pod.(*Pod)
 				if ok && pod.Spec.NodeName == node.Name {
@@ -267,8 +269,8 @@ func (*nodePodUpdater) OnAdd(interface{}) {}
 // namespace they will generate their own delete events.
 func (*nodePodUpdater) OnDelete(interface{}) {}
 
-// checkMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrence
-func checkMetadata(newmetadata, oldmetadata map[string]string) bool {
+// isEqualMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrence
+func isEqualMetadata(newmetadata, oldmetadata map[string]string) bool {
 	check := reflect.DeepEqual(newmetadata, oldmetadata)
 	return check
 }
