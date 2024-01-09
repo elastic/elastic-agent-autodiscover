@@ -138,9 +138,9 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
-// OldobjectWatcher is the interface  that an object needs to implement to be
+// OldObjectWatcher is the interface  that an object needs to implement to be
 // able to use Oldobject cache event function from watcher.
-type OldobjectWatcher interface {
+type oldObjectWatcher interface {
 	Oldobject() runtime.Object
 }
 
@@ -148,22 +148,23 @@ type OldobjectWatcher interface {
 type namespacePodUpdater struct {
 	handler          podUpdaterHandlerFunc
 	store            podUpdaterStore
-	namespacewatcher OldobjectWatcher
+	namespaceWatcher oldObjectWatcher
 	locker           sync.Locker
 }
 
 // NewNamespacePodUpdater creates a namespacePodUpdater
-func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespacewatcher OldobjectWatcher, locker sync.Locker) *namespacePodUpdater {
+func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespaceWatcher oldObjectWatcher, locker sync.Locker) *namespacePodUpdater {
 	return &namespacePodUpdater{
 		handler:          handler,
 		store:            store,
-		namespacewatcher: namespacewatcher,
+		namespaceWatcher: namespaceWatcher,
 		locker:           locker,
 	}
 }
 
 // OnUpdate handles update events on namespaces.
 func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
+
 	ns, ok := obj.(*Namespace)
 	if !ok {
 		return
@@ -178,12 +179,12 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	oldobject := n.namespacewatcher.Oldobject()
-	cachednamespaceold, ok := oldobject.(*Namespace)
+	cachedObject := n.namespaceWatcher.Oldobject()
+	cachedNamespace, ok := cachedObject.(*Namespace)
 
-	if ok && ns.Name == cachednamespaceold.Name {
-		labelscheck := isEqualMetadata(ns.ObjectMeta.Labels, cachednamespaceold.ObjectMeta.Labels)
-		annotationscheck := isEqualMetadata(ns.ObjectMeta.Annotations, cachednamespaceold.ObjectMeta.Annotations)
+	if ok && ns.Name == cachedNamespace.Name {
+		labelscheck := isEqualMetadata(ns.ObjectMeta.Labels, cachedNamespace.ObjectMeta.Labels)
+		annotationscheck := isEqualMetadata(ns.ObjectMeta.Annotations, cachedNamespace.ObjectMeta.Annotations)
 		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {
@@ -209,16 +210,16 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 type nodePodUpdater struct {
 	handler     podUpdaterHandlerFunc
 	store       podUpdaterStore
-	nodewatcher OldobjectWatcher
+	nodeWatcher oldObjectWatcher
 	locker      sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodewatcher OldobjectWatcher, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodeWatcher oldObjectWatcher, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
 		handler:     handler,
 		store:       store,
-		nodewatcher: nodewatcher,
+		nodeWatcher: nodeWatcher,
 		locker:      locker,
 	}
 }
@@ -239,13 +240,13 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	oldobject := n.nodewatcher.Oldobject()
-	cachednodeold, ok := oldobject.(*Node)
+	cachedObject := n.nodeWatcher.Oldobject()
+	cachedNode, ok := cachedObject.(*Node)
 
-	if ok && node.Name == cachednodeold.Name {
-		labelscheck := isEqualMetadata(node.ObjectMeta.Labels, cachednodeold.ObjectMeta.Labels)
-		annotationscheck := isEqualMetadata(node.ObjectMeta.Annotations, cachednodeold.ObjectMeta.Annotations)
-		// Only if there is a diffrence in Metadata labels or annotations proceed to Pod update
+	if ok && node.Name == cachedNode.Name {
+		labelscheck := isEqualMetadata(node.ObjectMeta.Labels, cachedNode.ObjectMeta.Labels)
+		annotationscheck := isEqualMetadata(node.ObjectMeta.Annotations, cachedNode.ObjectMeta.Annotations)
+		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {
 				pod, ok := pod.(*Pod)
@@ -265,7 +266,7 @@ func (*nodePodUpdater) OnAdd(interface{}) {}
 // namespace they will generate their own delete events.
 func (*nodePodUpdater) OnDelete(interface{}) {}
 
-// isEqualMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a diffrence
+// isEqualMetadata receives labels or annotations maps and checks their equality. Returns True if equal, False if there is a difference
 func isEqualMetadata(newmetadata, oldmetadata map[string]string) bool {
 	check := reflect.DeepEqual(newmetadata, oldmetadata)
 	return check

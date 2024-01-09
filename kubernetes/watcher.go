@@ -162,7 +162,7 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 				// state should just be deduped by autodiscover and not stop/started periodically as would be the case with an update.
 				w.enqueue(n, add)
 			}
-			w.oldobjectreturn(o)
+			w.cacheObject(o)
 
 		},
 	})
@@ -229,10 +229,11 @@ func (w *watcher) enqueue(obj interface{}, state string) {
 	w.queue.Add(&item{key, obj, state})
 }
 
-// oldobjectreturn returns the old version of cache objects before change on update events
-func (w *watcher) oldobjectreturn(o interface{}) {
+// cacheObject updates watcher with the old version of cache objects before change during update events
+func (w *watcher) cacheObject(o interface{}) {
 	if old, ok := o.(runtime.Object); !ok {
-		utilruntime.HandleError(fmt.Errorf("expected object in cache  got %#v", o))
+		w.logger.Debugf("Old Object was not retrieved from cache: %v", o)
+		w.oldobject = nil
 	} else {
 		w.oldobject = old
 	}
