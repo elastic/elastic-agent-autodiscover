@@ -138,9 +138,9 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
-// UpdateWatcher is the interface  that an object needs to implement to be
+// OldobjectWatcher is the interface  that an object needs to implement to be
 // able to use Oldobject cache event function from watcher.
-type UpdateWatcher interface {
+type OldobjectWatcher interface {
 	Oldobject() runtime.Object
 }
 
@@ -148,12 +148,12 @@ type UpdateWatcher interface {
 type namespacePodUpdater struct {
 	handler          podUpdaterHandlerFunc
 	store            podUpdaterStore
-	namespacewatcher UpdateWatcher
+	namespacewatcher OldobjectWatcher
 	locker           sync.Locker
 }
 
 // NewNamespacePodUpdater creates a namespacePodUpdater
-func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespacewatcher UpdateWatcher, locker sync.Locker) *namespacePodUpdater {
+func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespacewatcher OldobjectWatcher, locker sync.Locker) *namespacePodUpdater {
 	return &namespacePodUpdater{
 		handler:          handler,
 		store:            store,
@@ -209,12 +209,12 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 type nodePodUpdater struct {
 	handler     podUpdaterHandlerFunc
 	store       podUpdaterStore
-	nodewatcher UpdateWatcher
+	nodewatcher OldobjectWatcher
 	locker      sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodewatcher UpdateWatcher, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodewatcher OldobjectWatcher, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
 		handler:     handler,
 		store:       store,
