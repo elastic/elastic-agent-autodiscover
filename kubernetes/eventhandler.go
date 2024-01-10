@@ -138,22 +138,22 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
-// OldObjectWatcher is the interface  that an object needs to implement to be
-// able to use Oldobject cache event function from watcher.
-type oldObjectWatcher interface {
-	Oldobject() runtime.Object
+// CachedObjectWatcher is the interface  that an object needs to implement to be
+// able to use CachedObject cache event function from watcher.
+type cachedObjectWatcher interface {
+	CachedObject() runtime.Object
 }
 
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
 type namespacePodUpdater struct {
 	handler          podUpdaterHandlerFunc
 	store            podUpdaterStore
-	namespaceWatcher oldObjectWatcher
+	namespaceWatcher cachedObjectWatcher
 	locker           sync.Locker
 }
 
 // NewNamespacePodUpdater creates a namespacePodUpdater
-func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespaceWatcher oldObjectWatcher, locker sync.Locker) *namespacePodUpdater {
+func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespaceWatcher cachedObjectWatcher, locker sync.Locker) *namespacePodUpdater {
 	return &namespacePodUpdater{
 		handler:          handler,
 		store:            store,
@@ -177,7 +177,7 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	cachedObject := n.namespaceWatcher.Oldobject()
+	cachedObject := n.namespaceWatcher.CachedObject()
 	cachedNamespace, ok := cachedObject.(*Namespace)
 
 	if ok && ns.Name == cachedNamespace.Name {
@@ -208,12 +208,12 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 type nodePodUpdater struct {
 	handler     podUpdaterHandlerFunc
 	store       podUpdaterStore
-	nodeWatcher oldObjectWatcher
+	nodeWatcher cachedObjectWatcher
 	locker      sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodeWatcher oldObjectWatcher, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodeWatcher cachedObjectWatcher, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
 		handler:     handler,
 		store:       store,
@@ -237,7 +237,7 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
-	cachedObject := n.nodeWatcher.Oldobject()
+	cachedObject := n.nodeWatcher.CachedObject()
 	cachedNode, ok := cachedObject.(*Node)
 
 	if ok && node.Name == cachedNode.Name {

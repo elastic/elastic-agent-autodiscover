@@ -60,8 +60,8 @@ type Watcher interface {
 	// Client returns the kubernetes client object used by the watcher
 	Client() kubernetes.Interface
 
-	// Oldobject returns the old object before change during the last updated event
-	Oldobject() runtime.Object
+	// CachedObject returns the old object before change during the last updated event
+	CachedObject() runtime.Object
 }
 
 // WatchOptions controls watch behaviors
@@ -86,15 +86,15 @@ type item struct {
 }
 
 type watcher struct {
-	client    kubernetes.Interface
-	informer  cache.SharedInformer
-	store     cache.Store
-	queue     workqueue.Interface
-	ctx       context.Context
-	stop      context.CancelFunc
-	handler   ResourceEventHandler
-	logger    *logp.Logger
-	oldobject runtime.Object
+	client       kubernetes.Interface
+	informer     cache.SharedInformer
+	store        cache.Store
+	queue        workqueue.Interface
+	ctx          context.Context
+	stop         context.CancelFunc
+	handler      ResourceEventHandler
+	logger       *logp.Logger
+	cachedObject runtime.Object
 }
 
 // NewWatcher initializes the watcher client to provide a events handler for
@@ -110,7 +110,7 @@ func NewWatcher(client kubernetes.Interface, resource Resource, opts WatchOption
 func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource, opts WatchOptions, indexers cache.Indexers) (Watcher, error) {
 	var store cache.Store
 	var queue workqueue.Interface
-	var oldobject runtime.Object
+	var cachedObject runtime.Object
 	informer, _, err := NewInformer(client, resource, opts, indexers)
 	if err != nil {
 		return nil, err
@@ -131,15 +131,15 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 
 	ctx, cancel := context.WithCancel(context.TODO())
 	w := &watcher{
-		client:    client,
-		informer:  informer,
-		store:     store,
-		queue:     queue,
-		ctx:       ctx,
-		oldobject: oldobject,
-		stop:      cancel,
-		logger:    logp.NewLogger("kubernetes"),
-		handler:   NoOpEventHandlerFuncs{},
+		client:       client,
+		informer:     informer,
+		store:        store,
+		queue:        queue,
+		ctx:          ctx,
+		cachedObject: cachedObject,
+		stop:         cancel,
+		logger:       logp.NewLogger("kubernetes"),
+		handler:      NoOpEventHandlerFuncs{},
 	}
 
 	w.informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -186,8 +186,8 @@ func (w *watcher) Client() kubernetes.Interface {
 }
 
 // Oldbject returns the old object in cache during the last updated event
-func (w *watcher) Oldobject() runtime.Object {
-	return w.oldobject
+func (w *watcher) CachedObject() runtime.Object {
+	return w.cachedObject
 }
 
 // Start watching pods
@@ -234,7 +234,7 @@ func (w *watcher) cacheObject(o interface{}) {
 	if old, ok := o.(runtime.Object); !ok {
 		utilruntime.HandleError(fmt.Errorf("expected object in cache got %#v", o))
 	} else {
-		w.oldobject = old
+		w.cachedObject = old
 	}
 }
 
