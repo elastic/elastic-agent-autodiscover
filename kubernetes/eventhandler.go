@@ -20,8 +20,6 @@ package kubernetes
 import (
 	"reflect"
 	"sync"
-
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ResourceEventHandler can handle notifications for events that happen to a
@@ -138,22 +136,16 @@ type podUpdaterStore interface {
 	List() []interface{}
 }
 
-// CachedObjectWatcher is the interface  that an object needs to implement to be
-// able to use CachedObject cache event function from watcher.
-type cachedObjectWatcher interface {
-	CachedObject() runtime.Object
-}
-
 // namespacePodUpdater notifies updates on pods when their namespaces are updated.
 type namespacePodUpdater struct {
 	handler          podUpdaterHandlerFunc
 	store            podUpdaterStore
-	namespaceWatcher cachedObjectWatcher
+	namespaceWatcher Watcher
 	locker           sync.Locker
 }
 
 // NewNamespacePodUpdater creates a namespacePodUpdater
-func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespaceWatcher cachedObjectWatcher, locker sync.Locker) *namespacePodUpdater {
+func NewNamespacePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, namespaceWatcher Watcher, locker sync.Locker) *namespacePodUpdater {
 	return &namespacePodUpdater{
 		handler:          handler,
 		store:            store,
@@ -177,6 +169,7 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 		n.locker.Lock()
 		defer n.locker.Unlock()
 	}
+
 	cachedObject := n.namespaceWatcher.CachedObject()
 	cachedNamespace, ok := cachedObject.(*Namespace)
 
@@ -208,12 +201,12 @@ func (*namespacePodUpdater) OnDelete(interface{}) {}
 type nodePodUpdater struct {
 	handler     podUpdaterHandlerFunc
 	store       podUpdaterStore
-	nodeWatcher cachedObjectWatcher
+	nodeWatcher Watcher
 	locker      sync.Locker
 }
 
 // NewNodePodUpdater creates a nodePodUpdater
-func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodeWatcher cachedObjectWatcher, locker sync.Locker) *nodePodUpdater {
+func NewNodePodUpdater(handler podUpdaterHandlerFunc, store podUpdaterStore, nodeWatcher Watcher, locker sync.Locker) *nodePodUpdater {
 	return &nodePodUpdater{
 		handler:     handler,
 		store:       store,
