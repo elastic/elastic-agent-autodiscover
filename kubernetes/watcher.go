@@ -20,6 +20,8 @@ package kubernetes
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -162,7 +164,12 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 				// state should just be deduped by autodiscover and not stop/started periodically as would be the case with an update.
 				w.enqueue(n, add)
 			}
-			w.cacheObject(o)
+
+			//We check the type of resource and only if it is namespace or node return the cacheObject
+			stringresource := reflect.TypeOf(resource).String()
+			if strings.Contains(strings.ToLower(stringresource), "namespace") || strings.Contains(strings.ToLower(stringresource), "node") {
+				w.cacheObject(o)
+			}
 
 		},
 	})
