@@ -20,8 +20,6 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -166,11 +164,12 @@ func NewNamedWatcher(name string, client kubernetes.Interface, resource Resource
 			}
 
 			//We check the type of resource and only if it is namespace or node return the cacheObject
-			stringresource := reflect.TypeOf(resource).String()
-			if strings.Contains(strings.ToLower(stringresource), "namespace") || strings.Contains(strings.ToLower(stringresource), "node") {
+			switch resource.(type) {
+			case *Namespace:
+				w.cacheObject(o)
+			case *Node:
 				w.cacheObject(o)
 			}
-
 		},
 	})
 
