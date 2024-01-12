@@ -36,11 +36,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.6.2]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.1...v0.6.2
 
 
-## [0.6.6]
+## [0.6.7]
 
 ### Changed
 
 - Update NewNodePodUpdater and NewNamespacePodUpdater functions to conditionally check and update kubernetes metadata enrichment of pods
 
 
-[0.6.6]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.2...v0.6.6
+[0.6.6]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.2...v0.6.7
