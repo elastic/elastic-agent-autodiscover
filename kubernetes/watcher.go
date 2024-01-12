@@ -191,7 +191,7 @@ func (w *watcher) Client() kubernetes.Interface {
 	return w.client
 }
 
-// Oldbject returns the old object in cache during the last updated event
+// CachedObject returns the old object in cache during the last updated event
 func (w *watcher) CachedObject() runtime.Object {
 	return w.cachedObject
 }
