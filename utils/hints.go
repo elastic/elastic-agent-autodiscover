@@ -208,22 +208,19 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 	if rawEntries, err := annotations.GetValue(prefix); err == nil {
 		if entries, ok := rawEntries.(mapstr.M); ok {
 			for key, rawValue := range entries {
+				found := false
 				// If there are top level hints like co.elastic.logs/ then just add the values after the /
 				// Only consider namespaced annotations
 				parts := strings.Split(key, "/")
 				if len(parts) == 2 {
 					hintKey := fmt.Sprintf("%s.%s", parts[0], parts[1])
 					//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that start with co.elastic.hints
-					found := false
 					for _, checksupported := range allSupportedHints {
 						if parts[1] == checksupported {
 							found = true
 							break
 						}
 					}
-					if !found {
-						returnerror = fmt.Errorf("provided hint :%v is not in the supported list", parts[1])
-					} //End of check
 
 					// Insert only if there is no entry already. container level annotations take
 					// higher priority.
@@ -246,6 +243,13 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						if strings.HasPrefix(hintKey, container) {
 							// Split the key to get part[1] to be the hint
 							parts := strings.Split(hintKey, "/")
+							//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that start with co.elastic.hints
+							for _, checksupported := range allSupportedHints {
+								if parts[1] == checksupported {
+									found = true
+									break
+								}
+							}
 							if len(parts) == 2 {
 								// key will be the hint type
 								hintKey := fmt.Sprintf("%s.%s", key, parts[1])
@@ -257,6 +261,11 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						}
 					}
 				}
+
+				if !found {
+					returnerror = fmt.Errorf("provided hint :%v is not in the supported list", parts[1])
+				} //End of check
+
 			}
 		}
 	}
