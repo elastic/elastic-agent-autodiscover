@@ -50,6 +50,21 @@ func TestGetProcessors(t *testing.T) {
 }
 
 func TestGenerateHints(t *testing.T) {
+	const (
+		integration = "package"
+		datastreams = "data_streams"
+		host        = "host"
+		period      = "period"
+		timeout     = "timeout"
+		metricspath = "metrics_path"
+		username    = "username"
+		password    = "password"
+		stream      = "stream" // this is the container stream: stdout/stderr
+		processors  = "processors"
+	)
+
+	var allSupportedHints = []string{"enabled", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors}
+
 	tests := []struct {
 		annotations map[string]string
 		result      mapstr.M
@@ -219,7 +234,8 @@ func TestGenerateHints(t *testing.T) {
 				continue
 			}
 		}
-		assert.Equal(t, test.result, GenerateHints(annMap, "foobar", "co.elastic"))
+		generateHints, _ := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
+		assert.Equal(t, test.result, generateHints)
 	}
 }
 func TestGetHintsAsList(t *testing.T) {

@@ -202,8 +202,9 @@ func IsDisabled(hints mapstr.M, key string) bool {
 }
 
 // GenerateHints parses annotations based on a prefix and sets up hints that can be picked up by individual Beats.
-func GenerateHints(annotations mapstr.M, container, prefix string) mapstr.M {
+func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedHints []string) (mapstr.M, error) {
 	hints := mapstr.M{}
+	returnerror := error(nil)
 	if rawEntries, err := annotations.GetValue(prefix); err == nil {
 		if entries, ok := rawEntries.(mapstr.M); ok {
 			for key, rawValue := range entries {
@@ -212,6 +213,18 @@ func GenerateHints(annotations mapstr.M, container, prefix string) mapstr.M {
 				parts := strings.Split(key, "/")
 				if len(parts) == 2 {
 					hintKey := fmt.Sprintf("%s.%s", parts[0], parts[1])
+					//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that start with co.elastic.hints
+					found := false
+					for _, checksupported := range allSupportedHints {
+						if parts[1] == checksupported {
+							found = true
+							break
+						}
+					}
+					if !found {
+						returnerror = fmt.Errorf("provided hint :%v is not in the supported list", parts[1])
+					} //End of check
+
 					// Insert only if there is no entry already. container level annotations take
 					// higher priority.
 					if _, err := hints.GetValue(hintKey); err != nil {
@@ -248,7 +261,11 @@ func GenerateHints(annotations mapstr.M, container, prefix string) mapstr.M {
 		}
 	}
 
-	return hints
+	if returnerror == nil {
+		return hints, nil
+	}
+
+	return hints, returnerror
 }
 
 // GetHintsAsList gets a set of hints and tries to convert them into a list of hints
