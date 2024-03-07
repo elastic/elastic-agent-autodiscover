@@ -70,7 +70,7 @@ func TestGenerateHints(t *testing.T) {
 		annotations map[string]string
 		result      mapstr.M
 	}{
-		Empty annotations should return empty hints
+		//Empty annotations should return empty hints
 		{
 			name:        "test0",
 			annotations: map[string]string{},
@@ -243,12 +243,12 @@ func TestGenerateHints(t *testing.T) {
 				continue
 			}
 		}
-		generateHints, incorrecthints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
+		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
 		//Only in test2 we have added co.elastic.hints.steam annotation with a typo error
 		if test.name == "test2" {
-			assert.Equal(t, 1, len(incorrecthints)) // We validate how many incorrect hints are provided in test1.
+			assert.Equal(t, 1, len(incorrectHints)) // We validate how many incorrect hints are provided in test1.
 		} else {
-			assert.Equal(t, 0, len(incorrecthints)) // We validate how many incorrect hints are provided in rest of tests
+			assert.Equal(t, 0, len(incorrectHints)) // We validate how many incorrect hints are provided in rest of tests
 		}
 		assert.Equal(t, test.result, generateHints)
 	}
