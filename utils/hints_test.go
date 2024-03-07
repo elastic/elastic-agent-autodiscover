@@ -72,7 +72,7 @@ func TestGenerateHints(t *testing.T) {
 	}{
 		//Empty annotations should return empty hints
 		{
-			name:        "test0",
+			name:        "Empty_Annotations",
 			annotations: map[string]string{},
 			result:      mapstr.M{},
 		},
@@ -85,7 +85,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
-			name: "test1",
+			name: "Logs_multiline_and_metrics",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern":    "^test",
 				"co.elastic.logs/json.keys_under_root": "true",
@@ -116,7 +116,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// metrics/metrics_path must be found in hints.metrics
 		{
-			name: "test2",
+			name: "Logs_multiline_and_metrics_with_metrics_path",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern": "^test",
 				"co.elastic.metrics/module":         "prometheus",
@@ -146,13 +146,12 @@ func TestGenerateHints(t *testing.T) {
 			},
 		},
 		// Scenarios being tested:
-		// have co.elastic.logs/disable set to false.
 		// logs/multiline.pattern must be a nested mapstr.M under hints.logs
 		// metrics/module must be found in hints.metrics
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
-			name: "test3",
+			name: "Logs_multiline_and_metrics",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern": "^test",
 				"co.elastic.metrics/module":         "prometheus",
@@ -180,7 +179,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
-			name: "test4",
+			name: "Logs_disabled_false_and_metrics",
 			annotations: map[string]string{
 				"co.elastic.logs/disable":           "false",
 				"co.elastic.logs/multiline.pattern": "^test",
@@ -210,7 +209,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
-			name: "test5",
+			name: "Logs_disabled_true_and_metrics",
 			annotations: map[string]string{
 				"co.elastic.logs/disable":           "true",
 				"co.elastic.logs/multiline.pattern": "^test",
@@ -244,8 +243,8 @@ func TestGenerateHints(t *testing.T) {
 			}
 		}
 		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
-		//Only in test2 we have added co.elastic.hints.steam annotation with a typo error
-		if test.name == "test2" {
+		//Only in Logs_multiline_and_metrics_with_metrics_path we have added co.elastic.hints.steam annotation with a typo error
+		if test.name == "Logs_multiline_and_metrics_with_metrics_path" {
 			assert.Equal(t, 1, len(incorrectHints)) // We validate how many incorrect hints are provided in test1.
 		} else {
 			assert.Equal(t, 0, len(incorrectHints)) // We validate how many incorrect hints are provided in rest of tests
