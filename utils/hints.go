@@ -202,9 +202,9 @@ func IsDisabled(hints mapstr.M, key string) bool {
 }
 
 // GenerateHints parses annotations based on a prefix and sets up hints that can be picked up by individual Beats.
-func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedHints []string) (mapstr.M, error) {
+func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedHints []string) (mapstr.M, []string) {
 	hints := mapstr.M{}
-	returnerror := error(nil)
+	var incorrecthints []string
 	if rawEntries, err := annotations.GetValue(prefix); err == nil {
 		if entries, ok := rawEntries.(mapstr.M); ok {
 			for key, rawValue := range entries {
@@ -261,20 +261,14 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						}
 					}
 				}
-
 				if !found {
-					returnerror = fmt.Errorf("provided hint :%v is not in the supported list", parts[1])
-				} //End of check
-
+					incorrecthints = append(incorrecthints, key)
+				}
 			}
 		}
 	}
 
-	if returnerror == nil {
-		return hints, nil
-	}
-
-	return hints, returnerror
+	return hints, incorrecthints
 }
 
 // GetHintsAsList gets a set of hints and tries to convert them into a list of hints

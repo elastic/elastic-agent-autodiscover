@@ -63,7 +63,7 @@ func TestGenerateHints(t *testing.T) {
 		processors  = "processors"
 	)
 
-	var allSupportedHints = []string{"enabled", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors}
+	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors}
 
 	tests := []struct {
 		annotations map[string]string
@@ -114,15 +114,15 @@ func TestGenerateHints(t *testing.T) {
 		// metrics/metrics_path must be found in hints.metrics
 		{
 			annotations: map[string]string{
-				"co.elastic.logs/multiline.pattern": "^test",
-				"co.elastic.metrics/module":         "prometheus",
-				"co.elastic.metrics/period":         "10s",
-				"co.elastic.metrics/metrics_path":   "/metrics/prometheus",
-				"co.elastic.metrics/username":       "user",
-				"co.elastic.metrics/password":       "pass",
-				"co.elastic.metrics.foobar/period":  "15s",
-				"co.elastic.metrics.foobar1/period": "15s",
-				"not.to.include":                    "true",
+				"co.elastic.logs/multiline.pattern":  "^test",
+				"co.elastic.metrics/module":          "prometheus",
+				"co.elastic.metrics/period":          "10s",
+				"co.elastic.metrics/metrics_path":    "/metrics/prometheus",
+				"co.elastic.metrics/username":        "user",
+				"co.elastic.metrics/password":        "pass",
+				"co.elastic.metrics.foobar/period":   "15s",
+				"co.elastic.metrics.foobar1/periods": "15s",
+				"not.to.include":                     "true",
 			},
 			result: mapstr.M{
 				"logs": mapstr.M{
