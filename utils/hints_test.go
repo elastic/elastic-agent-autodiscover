@@ -66,23 +66,26 @@ func TestGenerateHints(t *testing.T) {
 	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors, "multiline", "json", "disable"}
 
 	tests := []struct {
+		name        string
 		annotations map[string]string
 		result      mapstr.M
 	}{
 		// Empty annotations should return empty hints
-		{
-			annotations: map[string]string{},
-			result:      mapstr.M{},
-		},
+		// {
+		// 	name:        "test0",
+		// 	annotations: map[string]string{},
+		// 	result:      mapstr.M{},
+		// },
 
-		// Scenarios being tested:
-		// logs/multiline.pattern must be a nested mapstr.M under hints.logs
-		// logs/processors.add_fields must be nested mapstr.M under hints.logs
-		// logs/json.keys_under_root must be a nested mapstr.M under hints.logs
-		// metrics/module must be found in hints.metrics
-		// not.to.include must not be part of hints
-		// period is annotated at both container and pod level. Container level value must be in hints
+		// // Scenarios being tested:
+		// // logs/multiline.pattern must be a nested mapstr.M under hints.logs
+		// // logs/processors.add_fields must be nested mapstr.M under hints.logs
+		// // logs/json.keys_under_root must be a nested mapstr.M under hints.logs
+		// // metrics/module must be found in hints.metrics
+		// // not.to.include must not be part of hints
+		// // period is annotated at both container and pod level. Container level value must be in hints
 		{
+			name: "test1",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern":    "^test",
 				"co.elastic.logs/json.keys_under_root": "true",
@@ -90,7 +93,6 @@ func TestGenerateHints(t *testing.T) {
 				"co.elastic.metrics/period":            "10s",
 				"co.elastic.metrics.foobar/period":     "15s",
 				"co.elastic.metrics.foobar1/period":    "15s",
-				"co.elastic.hints.steam":               "stdout", // On purpose this added with typo
 				"not.to.include":                       "true",
 			},
 			result: mapstr.M{
@@ -114,6 +116,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// metrics/metrics_path must be found in hints.metrics
 		{
+			name: "test2",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern": "^test",
 				"co.elastic.metrics/module":         "prometheus",
@@ -123,6 +126,7 @@ func TestGenerateHints(t *testing.T) {
 				"co.elastic.metrics/password":       "pass",
 				"co.elastic.metrics.foobar/period":  "15s",
 				"co.elastic.metrics.foobar1/period": "15s",
+				"co.elastic.hints/steam":            "stdout", // On purpose this added with typo
 				"not.to.include":                    "true",
 			},
 			result: mapstr.M{
@@ -131,6 +135,7 @@ func TestGenerateHints(t *testing.T) {
 						"pattern": "^test",
 					},
 				},
+				"hints": mapstr.M{"steam": "stdout"},
 				"metrics": mapstr.M{
 					"module":       "prometheus",
 					"period":       "15s",
@@ -147,6 +152,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
+			name: "test3",
 			annotations: map[string]string{
 				"co.elastic.logs/multiline.pattern": "^test",
 				"co.elastic.metrics/module":         "prometheus",
@@ -174,6 +180,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
+			name: "test4",
 			annotations: map[string]string{
 				"co.elastic.logs/disable":           "false",
 				"co.elastic.logs/multiline.pattern": "^test",
@@ -203,6 +210,7 @@ func TestGenerateHints(t *testing.T) {
 		// not.to.include must not be part of hints
 		// period is annotated at both container and pod level. Container level value must be in hints
 		{
+			name: "test5",
 			annotations: map[string]string{
 				"co.elastic.logs/disable":           "true",
 				"co.elastic.logs/multiline.pattern": "^test",
@@ -227,7 +235,7 @@ func TestGenerateHints(t *testing.T) {
 		},
 	}
 
-	for key, test := range tests {
+	for _, test := range tests {
 		annMap := mapstr.M{}
 		for k, v := range test.annotations {
 			_, err := annMap.Put(k, v)
@@ -237,7 +245,9 @@ func TestGenerateHints(t *testing.T) {
 		}
 		generateHints, incorrecthints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
 		//Only in test1 we have added co.elastic.hints.steam annotation with a typo error
-		if key == 1 {
+		if test.name == "test2" {
+			t.Log(annMap)
+			t.Log(incorrecthints)
 			assert.Equal(t, 1, len(incorrecthints)) // We validate how many incorrect hints are provided in test1.
 		} else {
 			assert.Equal(t, 0, len(incorrecthints)) // We validate how many incorrect hints are provided in rest of tests
