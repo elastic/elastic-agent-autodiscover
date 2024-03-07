@@ -215,7 +215,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 				parts := strings.Split(key, "/")
 				if len(parts) == 2 {
 					hintKey := fmt.Sprintf("%s.%s", parts[0], parts[1])
-					//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that start with co.elastic.hints
+					//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 					found = checkSupportedHints(parts[1], allSupportedHints)
 
 					// Insert only if there is no entry already. container level annotations take
@@ -239,7 +239,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						if strings.HasPrefix(hintKey, container) {
 							// Split the key to get part[1] to be the hint
 							parts := strings.Split(hintKey, "/")
-							//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that start with co.elastic.hints
+							//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 							found = checkSupportedHints(parts[1], allSupportedHints)
 							if len(parts) == 2 {
 								// key will be the hint type
