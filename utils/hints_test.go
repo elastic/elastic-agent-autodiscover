@@ -63,7 +63,7 @@ func TestGenerateHints(t *testing.T) {
 		processors  = "processors"
 	)
 
-	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors}
+	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors, "multiline", "json", "disable"}
 
 	tests := []struct {
 		annotations map[string]string
@@ -90,6 +90,7 @@ func TestGenerateHints(t *testing.T) {
 				"co.elastic.metrics/period":            "10s",
 				"co.elastic.metrics.foobar/period":     "15s",
 				"co.elastic.metrics.foobar1/period":    "15s",
+				"co.elastic.hints.steam":               "stdout", // On purpose this added with typo
 				"not.to.include":                       "true",
 			},
 			result: mapstr.M{
@@ -114,15 +115,15 @@ func TestGenerateHints(t *testing.T) {
 		// metrics/metrics_path must be found in hints.metrics
 		{
 			annotations: map[string]string{
-				"co.elastic.logs/multiline.pattern":  "^test",
-				"co.elastic.metrics/module":          "prometheus",
-				"co.elastic.metrics/period":          "10s",
-				"co.elastic.metrics/metrics_path":    "/metrics/prometheus",
-				"co.elastic.metrics/username":        "user",
-				"co.elastic.metrics/password":        "pass",
-				"co.elastic.metrics.foobar/period":   "15s",
-				"co.elastic.metrics.foobar1/periods": "15s",
-				"not.to.include":                     "true",
+				"co.elastic.logs/multiline.pattern": "^test",
+				"co.elastic.metrics/module":         "prometheus",
+				"co.elastic.metrics/period":         "10s",
+				"co.elastic.metrics/metrics_path":   "/metrics/prometheus",
+				"co.elastic.metrics/username":       "user",
+				"co.elastic.metrics/password":       "pass",
+				"co.elastic.metrics.foobar/period":  "15s",
+				"co.elastic.metrics.foobar1/period": "15s",
+				"not.to.include":                    "true",
 			},
 			result: mapstr.M{
 				"logs": mapstr.M{
@@ -226,7 +227,7 @@ func TestGenerateHints(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
+	for key, test := range tests {
 		annMap := mapstr.M{}
 		for k, v := range test.annotations {
 			_, err := annMap.Put(k, v)
@@ -234,7 +235,13 @@ func TestGenerateHints(t *testing.T) {
 				continue
 			}
 		}
-		generateHints, _ := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
+		generateHints, incorrecthints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
+		//Only in test1 we have added co.elastic.hints.steam annotation with a typo error
+		if key == 1 {
+			assert.Equal(t, 1, len(incorrecthints)) // We validate how many incorrect hints are provided in test1.
+		} else {
+			assert.Equal(t, 0, len(incorrecthints)) // We validate how many incorrect hints are provided in rest of tests
+		}
 		assert.Equal(t, test.result, generateHints)
 	}
 }
