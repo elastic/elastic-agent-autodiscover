@@ -66,15 +66,17 @@ func TestGenerateHints(t *testing.T) {
 	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors, "multiline", "json", "disable"}
 
 	tests := []struct {
-		name        string
-		annotations map[string]string
-		result      mapstr.M
+		name                   string
+		annotations            map[string]string
+		result                 mapstr.M
+		expectedIncorrectHints int // We set the number of hints that will be marked as incorrect and wont part of the acceptable supported list
 	}{
 		//Empty annotations should return empty hints
 		{
-			name:        "Empty_Annotations",
-			annotations: map[string]string{},
-			result:      mapstr.M{},
+			name:                   "Empty_Annotations",
+			annotations:            map[string]string{},
+			result:                 mapstr.M{},
+			expectedIncorrectHints: 0,
 		},
 
 		// Scenarios being tested:
@@ -109,6 +111,7 @@ func TestGenerateHints(t *testing.T) {
 					"period": "15s",
 				},
 			},
+			expectedIncorrectHints: 0,
 		},
 		// Scenarios being tested:
 		// logs/multiline.pattern must be a nested mapstr.M under hints.logs
@@ -144,6 +147,7 @@ func TestGenerateHints(t *testing.T) {
 					"password":     "pass",
 				},
 			},
+			expectedIncorrectHints: 1, // Due to co.elastic.hints/steam and not co.elastic.hints/stream
 		},
 		// Scenarios being tested:
 		// logs/multiline.pattern must be a nested mapstr.M under hints.logs
@@ -171,6 +175,7 @@ func TestGenerateHints(t *testing.T) {
 					"period": "15s",
 				},
 			},
+			expectedIncorrectHints: 0,
 		},
 		// Scenarios being tested:
 		// have co.elastic.logs/disable set to false.
@@ -201,6 +206,7 @@ func TestGenerateHints(t *testing.T) {
 					"period": "15s",
 				},
 			},
+			expectedIncorrectHints: 0,
 		},
 		// Scenarios being tested:
 		// have co.elastic.logs/disable set to true.
@@ -231,6 +237,7 @@ func TestGenerateHints(t *testing.T) {
 					"period": "15s",
 				},
 			},
+			expectedIncorrectHints: 0,
 		},
 	}
 
@@ -243,12 +250,7 @@ func TestGenerateHints(t *testing.T) {
 			}
 		}
 		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
-		//Only in Logs_multiline_and_metrics_with_metrics_path we have added co.elastic.hints.steam annotation with a typo error
-		if test.name == "Logs_multiline_and_metrics_with_metrics_path" {
-			assert.Equal(t, 1, len(incorrectHints)) // We validate how many incorrect hints are provided in test1.
-		} else {
-			assert.Equal(t, 0, len(incorrectHints)) // We validate how many incorrect hints are provided in rest of tests
-		}
+		assert.Equal(t, test.expectedIncorrectHints, len(incorrectHints)) // We validate how many incorrect hints are provided per test case.
 		assert.Equal(t, test.result, generateHints)
 	}
 }
