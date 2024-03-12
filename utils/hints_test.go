@@ -69,7 +69,7 @@ func TestGenerateHints(t *testing.T) {
 		name                   string
 		annotations            map[string]string
 		result                 mapstr.M
-		expectedIncorrectHints int // We set the number of hints that will be marked as incorrect and wont part of the acceptable supported list
+		expectedIncorrectHints int // We set the number of hints that will be marked as incorrect and wont be included in the acceptable supported list
 	}{
 		//Empty annotations should return empty hints
 		{
