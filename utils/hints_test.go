@@ -50,20 +50,8 @@ func TestGetProcessors(t *testing.T) {
 }
 
 func TestGenerateHints(t *testing.T) {
-	const (
-		integration = "package"
-		datastreams = "data_streams"
-		host        = "host"
-		period      = "period"
-		timeout     = "timeout"
-		metricspath = "metrics_path"
-		username    = "username"
-		password    = "password"
-		stream      = "stream" // this is the container stream: stdout/stderr
-		processors  = "processors"
-	)
 
-	var allSupportedHints = []string{"enabled", "module", integration, datastreams, host, period, timeout, metricspath, username, password, stream, processors, "multiline", "json", "disable"}
+	var allSupportedHints = []string{"enabled", "module", "integration", "datas_treams", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
 
 	tests := []struct {
 		name                   string
