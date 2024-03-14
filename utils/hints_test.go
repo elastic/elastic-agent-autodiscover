@@ -51,7 +51,11 @@ func TestGetProcessors(t *testing.T) {
 
 func TestGenerateHints(t *testing.T) {
 
+<<<<<<< HEAD
 	var allSupportedHints = []string{"enabled", "package", "module", "integration", "data_streams", "metricsets", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
+=======
+	var allSupportedHints = []string{"enabled", "module", "integration", "datas_treams", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
+>>>>>>> 7490558445cb8d3248462255edc8ac64bc18b8eb
 
 	tests := []struct {
 		name                   string
@@ -285,7 +289,6 @@ func TestGenerateHints(t *testing.T) {
 		}
 
 		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
-		t.Log(incorrectHints)
 		assert.Equal(t, test.expectedIncorrectHints, len(incorrectHints)) // We validate how many incorrect hints are provided per test case.
 		assert.Equal(t, test.result, generateHints)
 	}

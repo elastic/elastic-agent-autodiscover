@@ -211,6 +211,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 			datastreamlist := GetHintAsList(entries, logName+"/"+"data_streams", "")
 			metricsetlist := GetHintAsList(entries, "metrics"+"/"+"metricsets", "")
 			for key, rawValue := range entries {
+
 				// If there are top level hints like co.elastic.logs/ then just add the values after the /
 				// Only consider namespaced annotations
 				parts := strings.Split(key, "/")
