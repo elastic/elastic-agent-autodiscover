@@ -51,11 +51,7 @@ func TestGetProcessors(t *testing.T) {
 
 func TestGenerateHints(t *testing.T) {
 
-<<<<<<< HEAD
 	var allSupportedHints = []string{"enabled", "package", "module", "integration", "data_streams", "metricsets", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
-=======
-	var allSupportedHints = []string{"enabled", "module", "integration", "datas_treams", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
->>>>>>> 7490558445cb8d3248462255edc8ac64bc18b8eb
 
 	tests := []struct {
 		name                   string

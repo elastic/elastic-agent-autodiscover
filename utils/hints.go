@@ -271,7 +271,6 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 								if err != nil {
 									continue
 								}
-
 							}
 						}
 					}
@@ -348,6 +347,7 @@ func checkSupportedHints(actualannotation string, allSupportedHints []string, st
 	return found
 }
 
+// checkSupportedHintsSets gest the data_streams or metricset lists that are defined. Searches inside specific hints of those lists and returns the unsupported list of hints found
 func checkSupportedHintsSets(annotations mapstr.M, key, prefix, actualannotation string, streamlist, allSupportedHints, incorrecthints []string) []string {
 	found := false
 	for _, streams := range streamlist {
