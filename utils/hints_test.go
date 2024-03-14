@@ -51,7 +51,7 @@ func TestGetProcessors(t *testing.T) {
 
 func TestGenerateHints(t *testing.T) {
 
-	var allSupportedHints = []string{"enabled", "module", "integration", "datas_treams", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
+	var allSupportedHints = []string{"enabled", "package", "module", "integration", "data_streams", "metricsets", "host", "period", "timeout", "metrics_path", "username", "password", "stream", "processors", "multiline", "json", "disable"}
 
 	tests := []struct {
 		name                   string
@@ -227,6 +227,52 @@ func TestGenerateHints(t *testing.T) {
 			},
 			expectedIncorrectHints: 0,
 		},
+		// Scenarios being tested:
+		// have co.elastic.hints/package set.
+		// Define multiple co.elastic.hints/data_streams and also specific configuration for each one
+		// A typo error introduced for "co.elastic.hints/access.streams"
+		{
+			name: "Metrics_apache_package_and_specific_config_per_datastream",
+			annotations: map[string]string{
+				"co.elastic.hints/package":        "apache",
+				"co.elastic.hints/data_streams":   "access,error",
+				"co.elastic.hints/access.period":  "5m",
+				"co.elastic.hints/access.streams": "stdout", // On purpose this added with typo
+				"co.elastic.hints/error.period":   "5m",
+				"co.elastic.hints/error.stream":   "stderr",
+			},
+			result: mapstr.M{
+				"hints": mapstr.M{
+					"data_streams": "access,error",
+					"access":       mapstr.M{"period": "5m", "streams": "stdout"},
+					"error":        mapstr.M{"period": "5m", "stream": "stderr"},
+					"package":      "apache",
+				}},
+			expectedIncorrectHints: 1, // Due to co.elastic.hints/access.streams and not co.elastic.hints/access.stream
+		},
+		// Scenarios being tested:
+		// have co.elastic.metrics/module set.
+		// Define multiple co.elastic.hints/data_streams and also specific configuration for each one
+		// A typo error introduced for "co.elastic.hints/access.streams"
+		{
+			name: "Metrics_istio_module_and_specific_config_per_metricset",
+			annotations: map[string]string{
+				"co.elastic.metrics/module":         "istio",
+				"co.elastic.metrics/metricsets":     "istiod,proxy",
+				"co.elastic.metrics/istiod.period":  "5m",
+				"co.elastic.metrics/istiod.streams": "stdout", // On purpose this added with typo
+				"co.elastic.metrics/proxy.period":   "5m",
+				"co.elastic.metrics/proxy.stream":   "stderr",
+			},
+			result: mapstr.M{
+				"metrics": mapstr.M{
+					"metricsets": "istiod,proxy",
+					"istiod":     mapstr.M{"period": "5m", "streams": "stdout"},
+					"proxy":      mapstr.M{"period": "5m", "stream": "stderr"},
+					"module":     "istio",
+				}},
+			expectedIncorrectHints: 1, // Due to co.elastic.metrics/istiod.streams and not co.elastic.metrics/istiod.stream
+		},
 	}
 
 	for _, test := range tests {
@@ -237,7 +283,9 @@ func TestGenerateHints(t *testing.T) {
 				continue
 			}
 		}
+
 		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
+		t.Log(incorrectHints)
 		assert.Equal(t, test.expectedIncorrectHints, len(incorrectHints)) // We validate how many incorrect hints are provided per test case.
 		assert.Equal(t, test.result, generateHints)
 	}
