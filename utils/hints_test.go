@@ -250,56 +250,56 @@ func TestGenerateHints(t *testing.T) {
 				}},
 			expectedIncorrectHints: 2, // Due to co.elastic.hints/access.streams and co.elastic.hints/error.streams
 		},
-		// // Scenarios being tested:
-		// // have co.elastic.metrics/module set.
-		// // Define multiple co.elastic.hints/data_streams and also specific configuration for each one
-		// // A typo error introduced for "co.elastic.metrics/istiod.streams"
-		// {
-		// 	name: "Metrics_istio_module_and_specific_config_per_metricset",
-		// 	annotations: map[string]string{
-		// 		"co.elastic.metrics/module":         "istio",
-		// 		"co.elastic.metrics/metricsets":     "istiod,proxy",
-		// 		"co.elastic.metrics/istiod.period":  "5m",
-		// 		"co.elastic.metrics/istiod.streams": "stdout", // On purpose this added with typo
-		// 		"co.elastic.metrics/proxy.period":   "5m",
-		// 		"co.elastic.metrics/proxy.stream":   "stderr",
-		// 	},
-		// 	result: mapstr.M{
-		// 		"metrics": mapstr.M{
-		// 			"metricsets": "istiod,proxy",
-		// 			"istiod":     mapstr.M{"period": "5m", "streams": "stdout"},
-		// 			"proxy":      mapstr.M{"period": "5m", "stream": "stderr"},
-		// 			"module":     "istio",
-		// 		}},
-		// 	expectedIncorrectHints: 1, // Due to co.elastic.metrics/istiod.streams and not co.elastic.metrics/istiod.stream
-		// },
-		// // Scenarios being tested:
-		// // have co.elastic.metrics/module set for multiple enumerations.
-		// // Define different hints for each one enumeration
-		// // A typo error introduced for "co.elastic.metrics/1.periods" and "co.elastic.metrics/2.streams"
-		// {
-		// 	name: "Metrics_multiple_modules_and_specific_config_per_module",
-		// 	annotations: map[string]string{
-		// 		"co.elastic.metrics/1.module":  "prometheus",
-		// 		"co.elastic.metrics/1.periods": "15s", // On purpose this added with typo
-		// 		"co.elastic.metrics/2.module":  "istiod",
-		// 		"co.elastic.metrics/2.period":  "15s",
-		// 		"co.elastic.metrics/2.streams": "stderr", // On purpose this added with typo
-		// 	},
-		// 	result: mapstr.M{
-		// 		"metrics": mapstr.M{
-		// 			"1": mapstr.M{
-		// 				"module":  "prometheus",
-		// 				"periods": "15s",
-		// 			},
-		// 			"2": mapstr.M{
-		// 				"module":  "istiod",
-		// 				"period":  "15s",
-		// 				"streams": "stderr",
-		// 			},
-		// 		}},
-		// 	expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periods typos and co.elastic.metrics/2.streams
-		// },
+		// Scenarios being tested:
+		// have co.elastic.metrics/module set.
+		// Define multiple co.elastic.hints/data_streams and also specific configuration for each one
+		// A typo error introduced for "co.elastic.metrics/istiod.streams"
+		{
+			name: "Metrics_istio_module_and_specific_config_per_metricset",
+			annotations: map[string]string{
+				"co.elastic.metrics/module":         "istio",
+				"co.elastic.metrics/metricsets":     "istiod,proxy",
+				"co.elastic.metrics/istiod.period":  "5m",
+				"co.elastic.metrics/istiod.streams": "stdout", // On purpose this added with typo
+				"co.elastic.metrics/proxy.period":   "5m",
+				"co.elastic.metrics/proxy.stream":   "stderr",
+			},
+			result: mapstr.M{
+				"metrics": mapstr.M{
+					"metricsets": "istiod,proxy",
+					"istiod":     mapstr.M{"period": "5m", "streams": "stdout"},
+					"proxy":      mapstr.M{"period": "5m", "stream": "stderr"},
+					"module":     "istio",
+				}},
+			expectedIncorrectHints: 1, // Due to co.elastic.metrics/istiod.streams and not co.elastic.metrics/istiod.stream
+		},
+		// Scenarios being tested:
+		// have co.elastic.metrics/module set for multiple enumerations.
+		// Define different hints for each one enumeration
+		// A typo error introduced for "co.elastic.metrics/1.periods" and "co.elastic.metrics/2.streams"
+		{
+			name: "Metrics_multiple_modules_and_specific_config_per_module",
+			annotations: map[string]string{
+				"co.elastic.metrics/1.module":  "prometheus",
+				"co.elastic.metrics/1.periods": "15s", // On purpose this added with typo
+				"co.elastic.metrics/2.module":  "istiod",
+				"co.elastic.metrics/2.period":  "15s",
+				"co.elastic.metrics/2.streams": "stderr", // On purpose this added with typo
+			},
+			result: mapstr.M{
+				"metrics": mapstr.M{
+					"1": mapstr.M{
+						"module":  "prometheus",
+						"periods": "15s",
+					},
+					"2": mapstr.M{
+						"module":  "istiod",
+						"period":  "15s",
+						"streams": "stderr",
+					},
+				}},
+			expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periods typos and co.elastic.metrics/2.streams
+		},
 	}
 
 	for _, test := range tests {
