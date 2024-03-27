@@ -241,14 +241,14 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 				if len(parts) == 2 {
 					hintKey := fmt.Sprintf("%s.%s", parts[0], parts[1])
 
-					checkdigit := digitCheck.MatchString(parts[1]) // With this regex we check if enumeration for metricsets is provided
+					checkdigit := digitCheck.MatchString(parts[1]) // With this regex we check if enumeration for modules is provided
 					if checkdigit {
 						allSupportedHints = append(allSupportedHints, parts[1])
 
 						specificlist, _ := entries.GetValue(key)
 						if specificentries, ok := specificlist.(mapstr.M); ok {
 							for keyspec := range specificentries {
-								// enumeratedmodules will be populated only in cases we have meticset enumeration, like:
+								// enumeratedmodules will be populated only in cases we have module enumeration, like:
 								// "co.elastic.metrics/1.module":  "prometheus",
 								// "co.elastic.metrics/2.module":  "istiod",
 								enumeratedmodules = append(enumeratedmodules, keyspec)
@@ -276,9 +276,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						if err != nil {
 							continue
 						}
-
 					}
-
 				} else if container != "" {
 					// Only consider annotations that are of type mapstr.M as we are looking for
 					// container level nesting
@@ -293,14 +291,14 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 							// Split the key to get part[1] to be the hint
 							parts := strings.Split(hintKey, "/")
 
-							checkdigit := digitCheck.MatchString(parts[1]) // With this regex we check if enumeration for metricsets is provided
+							checkdigit := digitCheck.MatchString(parts[1]) // With this regex we check if enumeration for modules is provided
 							if checkdigit {
 								allSupportedHints = append(allSupportedHints, parts[1])
 
 								specificlist, _ := entries.GetValue(key)
 								if specificentries, ok := specificlist.(mapstr.M); ok {
 									for keyspec := range specificentries {
-										// enumeratedmodules will be populated only in cases we have meticset enumeration, like:
+										// enumeratedmodules will be populated only in cases we have module enumeration, like:
 										// "co.elastic.metrics/1.module":  "prometheus",
 										// "co.elastic.metrics/2.module":  "istiod",
 										enumeratedmodules = append(enumeratedmodules, keyspec)
@@ -312,7 +310,11 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 								// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
 								// See Metrics_multiple_modules_and_specific_config_per_module test case in hints_test.go
 								for _, metric := range enumeratedmodules {
-									incorrecthints = checkSupportedHintsSets(annotations, prefix, metric, "metrics", allSupportedHints, incorrecthints)
+									_, incorrecthint = checkSupportedHints(metric, fmt.Sprintf("%s.%s", key, metric), allSupportedHints)
+									if incorrecthint != "" {
+										incorrecthints = append(incorrecthints, incorrecthint)
+									}
+
 								}
 							}
 							_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
