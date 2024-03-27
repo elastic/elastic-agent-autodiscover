@@ -298,7 +298,7 @@ func TestGenerateHints(t *testing.T) {
 						"streams": "stderr",
 					},
 				}},
-			expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periods typos and co.elastic.metrics/2.streams
+			expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periods and co.elastic.metrics/2.streams typos
 		},
 	}
 
@@ -312,8 +312,6 @@ func TestGenerateHints(t *testing.T) {
 		}
 
 		generateHints, incorrectHints := GenerateHints(annMap, "foobar", "co.elastic", allSupportedHints)
-		t.Log(test.name)
-		t.Log(incorrectHints)
 		assert.Equal(t, test.expectedIncorrectHints, len(incorrectHints)) // We validate how many incorrect hints are provided per test case.
 		assert.Equal(t, test.result, generateHints)
 	}
