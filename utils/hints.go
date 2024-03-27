@@ -400,7 +400,7 @@ func checkSupportedHints(actualannotation, key string, allSupportedHints []strin
 }
 
 // checkSupportedHintsSets gest the data_streams or metricset lists that are defined. Searches inside specific list and returns the unsupported list of hints found
-// This fucntion will merge the incorrect hints found in metricsets of data_streams with rest incorrect hints
+// This function will merge the incorrect hints found in metricsets of data_streams with rest incorrect hints
 func checkSupportedHintsSets(annotations mapstr.M, prefix, stream, kind string, allSupportedHints, incorrecthints []string) []string {
 	var incorrecthint string
 
