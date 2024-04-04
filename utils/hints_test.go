@@ -117,7 +117,7 @@ func TestGenerateHints(t *testing.T) {
 				"co.elastic.metrics/password":       "pass",
 				"co.elastic.metrics.foobar/period":  "15s",
 				"co.elastic.metrics.foobar1/period": "15s",
-				"co.elastic.hints/steam":            "stdout", // On purpose this added with typo
+				"co.elastic.hints/streamssssssssss": "stdout", // On purpose this added with typo
 				"not.to.include":                    "true",
 			},
 			result: mapstr.M{
@@ -126,7 +126,7 @@ func TestGenerateHints(t *testing.T) {
 						"pattern": "^test",
 					},
 				},
-				"hints": mapstr.M{"steam": "stdout"},
+				"hints": mapstr.M{"streamssssssssss": "stdout"},
 				"metrics": mapstr.M{
 					"module":       "prometheus",
 					"period":       "15s",
@@ -135,7 +135,7 @@ func TestGenerateHints(t *testing.T) {
 					"password":     "pass",
 				},
 			},
-			expectedIncorrectHints: 1, // Due to co.elastic.hints/steam and not co.elastic.hints/stream
+			expectedIncorrectHints: 1, // Due to co.elastic.hints/streamsteamssssssssss
 		},
 		// Scenarios being tested:
 		// logs/multiline.pattern must be a nested mapstr.M under hints.logs
@@ -234,21 +234,21 @@ func TestGenerateHints(t *testing.T) {
 		{
 			name: "Metrics_apache_package_and_specific_config_per_datastream",
 			annotations: map[string]string{
-				"co.elastic.hints/package":        "apache",
-				"co.elastic.hints/data_streams":   "access,error",
-				"co.elastic.hints/access.period":  "5m",
-				"co.elastic.hints/access.streams": "stdout", // On purpose this added with typo
-				"co.elastic.hints/error.period":   "5m",
-				"co.elastic.hints/error.streams":  "stderr", // On purpose this added with typo
+				"co.elastic.hints/package":                 "apache",
+				"co.elastic.hints/data_streams":            "access,error",
+				"co.elastic.hints/access.period":           "5m",
+				"co.elastic.hints/access.streamssssssssss": "stdout", // On purpose this added with typo
+				"co.elastic.hints/error.period":            "5m",
+				"co.elastic.hints/error.streamssssssssss":  "stderr", // On purpose this added with typo
 			},
 			result: mapstr.M{
 				"hints": mapstr.M{
 					"data_streams": "access,error",
-					"access":       mapstr.M{"period": "5m", "streams": "stdout"},
-					"error":        mapstr.M{"period": "5m", "streams": "stderr"},
+					"access":       mapstr.M{"period": "5m", "streamssssssssss": "stdout"},
+					"error":        mapstr.M{"period": "5m", "streamssssssssss": "stderr"},
 					"package":      "apache",
 				}},
-			expectedIncorrectHints: 2, // Due to co.elastic.hints/access.streams and co.elastic.hints/error.streams
+			expectedIncorrectHints: 2, // Due to co.elastic.hints/access.streamssssssssss and co.elastic.hints/error.streamssssssssss typo errors
 		},
 		// Scenarios being tested:
 		// have co.elastic.metrics/module set.
@@ -257,21 +257,21 @@ func TestGenerateHints(t *testing.T) {
 		{
 			name: "Metrics_istio_module_and_specific_config_per_metricset",
 			annotations: map[string]string{
-				"co.elastic.metrics/module":         "istio",
-				"co.elastic.metrics/metricsets":     "istiod,proxy",
-				"co.elastic.metrics/istiod.period":  "5m",
-				"co.elastic.metrics/istiod.streams": "stdout", // On purpose this added with typo
-				"co.elastic.metrics/proxy.period":   "5m",
-				"co.elastic.metrics/proxy.stream":   "stderr",
+				"co.elastic.metrics/module":                  "istio",
+				"co.elastic.metrics/metricsets":              "istiod,proxy",
+				"co.elastic.metrics/istiod.period":           "5m",
+				"co.elastic.metrics/istiod.streamssssssssss": "stdout", // On purpose this added with typo
+				"co.elastic.metrics/proxy.period":            "5m",
+				"co.elastic.metrics/proxy.stream":            "stderr",
 			},
 			result: mapstr.M{
 				"metrics": mapstr.M{
 					"metricsets": "istiod,proxy",
-					"istiod":     mapstr.M{"period": "5m", "streams": "stdout"},
+					"istiod":     mapstr.M{"period": "5m", "streamssssssssss": "stdout"},
 					"proxy":      mapstr.M{"period": "5m", "stream": "stderr"},
 					"module":     "istio",
 				}},
-			expectedIncorrectHints: 1, // Due to co.elastic.metrics/istiod.streams and not co.elastic.metrics/istiod.stream
+			expectedIncorrectHints: 1, // Due to co.elastic.metrics/istiod.streamssssssssss
 		},
 		// Scenarios being tested:
 		// have co.elastic.metrics/module set for multiple enumerations.
@@ -280,25 +280,25 @@ func TestGenerateHints(t *testing.T) {
 		{
 			name: "Metrics_multiple_modules_and_specific_config_per_module",
 			annotations: map[string]string{
-				"co.elastic.metrics/1.module":  "prometheus",
-				"co.elastic.metrics/1.periods": "15s", // On purpose this added with typo
-				"co.elastic.metrics/2.module":  "istiod",
-				"co.elastic.metrics/2.period":  "15s",
-				"co.elastic.metrics/2.streams": "stderr", // On purpose this added with typo
+				"co.elastic.metrics/1.module":           "prometheus",
+				"co.elastic.metrics/1.periodssssssssss": "15s", // On purpose this added with typo
+				"co.elastic.metrics/2.module":           "istiod",
+				"co.elastic.metrics/2.period":           "15s",
+				"co.elastic.metrics/2.streamssssssssss": "stderr", // On purpose this added with typo
 			},
 			result: mapstr.M{
 				"metrics": mapstr.M{
 					"1": mapstr.M{
-						"module":  "prometheus",
-						"periods": "15s",
+						"module":           "prometheus",
+						"periodssssssssss": "15s",
 					},
 					"2": mapstr.M{
-						"module":  "istiod",
-						"period":  "15s",
-						"streams": "stderr",
+						"module":           "istiod",
+						"period":           "15s",
+						"streamssssssssss": "stderr",
 					},
 				}},
-			expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periods and co.elastic.metrics/2.streams typos
+			expectedIncorrectHints: 2, // Due to co.elastic.metrics/1.periodssssssssss and co.elastic.metrics/2.streamssssssssss typo errors
 		},
 	}
 
