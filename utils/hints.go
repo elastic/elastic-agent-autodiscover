@@ -214,22 +214,18 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 
 			//Start of Annotation Check: whether the annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 			datastreamlist := GetHintAsList(entries, logName+"/"+"data_streams", "")
-			if len(datastreamlist) > 0 {
-				// We check if multiple data_streams are defined and we retrieve the hints per data_stream. Only applicable in elastic-agent
-				// See Metrics_apache_package_and_specific_config_per_datastream test case in hints_test.go
-				for _, stream := range datastreamlist {
-					allSupportedHints = append(allSupportedHints, stream)
-					incorrecthints = checkSupportedHintsSets(annotations, prefix, stream, logName, allSupportedHints, incorrecthints)
-				}
+			// We check if multiple data_streams are defined and we retrieve the hints per data_stream. Only applicable in elastic-agent
+			// See Metrics_apache_package_and_specific_config_per_datastream test case in hints_test.go
+			for _, stream := range datastreamlist {
+				allSupportedHints = append(allSupportedHints, stream)
+				incorrecthints = checkSupportedHintsSets(annotations, prefix, stream, logName, allSupportedHints, incorrecthints)
 			}
 			metricsetlist := GetHintAsList(entries, "metrics"+"/"+"metricsets", "")
-			if len(metricsetlist) > 0 {
-				// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
-				//See Metrics_istio_module_and_specific_config_per_metricset test case in hints_test.go
-				for _, metric := range metricsetlist {
-					allSupportedHints = append(allSupportedHints, metric)
-					incorrecthints = checkSupportedHintsSets(annotations, prefix, metric, "metrics", allSupportedHints, incorrecthints)
-				}
+			// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
+			//See Metrics_istio_module_and_specific_config_per_metricset test case in hints_test.go
+			for _, metric := range metricsetlist {
+				allSupportedHints = append(allSupportedHints, metric)
+				incorrecthints = checkSupportedHintsSets(annotations, prefix, metric, "metrics", allSupportedHints, incorrecthints)
 			}
 			//End of Annotation Check
 
