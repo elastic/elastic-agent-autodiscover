@@ -256,16 +256,14 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						}
 					}
 
-					if len(enumeratedmodules) > 0 {
-						// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
-						// See Metrics_multiple_modules_and_specific_config_per_module test case in hints_test.go
-						for _, metric := range enumeratedmodules {
-							_, incorrecthint = checkSupportedHints(metric, fmt.Sprintf("%s.%s", key, metric), allSupportedHints)
-							if incorrecthint != "" {
-								incorrecthints = append(incorrecthints, incorrecthint)
-							}
-
+					// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
+					// See Metrics_multiple_modules_and_specific_config_per_module test case in hints_test.go
+					for _, metric := range enumeratedmodules {
+						_, incorrecthint = checkSupportedHints(metric, fmt.Sprintf("%s.%s", key, metric), allSupportedHints)
+						if incorrecthint != "" {
+							incorrecthints = append(incorrecthints, incorrecthint)
 						}
+
 					}
 					_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
 
@@ -306,16 +304,14 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 								}
 							}
 
-							if len(enumeratedmodules) > 0 {
-								// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
-								// See Metrics_multiple_modules_and_specific_config_per_module test case in hints_test.go
-								for _, metric := range enumeratedmodules {
-									_, incorrecthint = checkSupportedHints(metric, fmt.Sprintf("%s.%s", key, metric), allSupportedHints)
-									if incorrecthint != "" {
-										incorrecthints = append(incorrecthints, incorrecthint)
-									}
-
+							// We check if multiple metrcisets are defined and we retrieve the hints per metricset. Only applicable in beats
+							// See Metrics_multiple_modules_and_specific_config_per_module test case in hints_test.go
+							for _, metric := range enumeratedmodules {
+								_, incorrecthint = checkSupportedHints(metric, fmt.Sprintf("%s.%s", key, metric), allSupportedHints)
+								if incorrecthint != "" {
+									incorrecthints = append(incorrecthints, incorrecthint)
 								}
+
 							}
 							_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
 
