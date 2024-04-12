@@ -261,6 +261,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 						}
 
 					}
+					//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 					_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
 
 					// Insert only if there is no entry already. container level annotations take
@@ -309,6 +310,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, allSupportedH
 								}
 
 							}
+							//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 							_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
 
 							//end of check
