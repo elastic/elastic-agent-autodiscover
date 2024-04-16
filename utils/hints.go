@@ -230,7 +230,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, validate bool
 					allSupportedHints = append(allSupportedHints, metric)
 					incorrecthints = checkSupportedHintsSets(annotations, prefix, metric, "metrics", allSupportedHints, incorrecthints)
 				}
-			} //End of Annotation Check
+			} //end of annotation check
 
 			for key, rawValue := range entries {
 				enumeratedmodules := []string{}
@@ -266,7 +266,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, validate bool
 						}
 						//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 						_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
-					} //end of check
+					} //end of annotation check
 
 					// Insert only if there is no entry already. container level annotations take
 					// higher priority.
@@ -317,7 +317,7 @@ func GenerateHints(annotations mapstr.M, container, prefix string, validate bool
 								}
 								//We check whether the provided annotation follows the supported format and vocabulary. The check happens for annotations that have prefix co.elastic
 								_, incorrecthint = checkSupportedHints(parts[1], key, allSupportedHints)
-							} //end of check
+							} //end of annotation check
 
 							if len(parts) == 2 {
 								// key will be the hint type
