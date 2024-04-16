@@ -54,11 +54,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 [0.6.9]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.8...v0.6.9
 
-## [0.6.11]
+## [0.6.12]
 
 ### Changed
 
 - Enhance GenerateHints function to check supported list of hints for multiple datastreams and metricsets
 
 
-[0.6.10]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.10...v0.6.11
+[0.6.10]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.10...v0.6.12
+
+
+## [0.6.13]
+
+### Changed
+
+- Enhance GenerateHints function with validate flag to enable the validation of hints
+
+
+[0.6.13]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.12...v0.6.13
