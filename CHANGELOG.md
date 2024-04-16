@@ -61,7 +61,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Enhance GenerateHints function to check supported list of hints for multiple datastreams and metricsets
 
 
-[0.6.10]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.10...v0.6.12
+[0.6.12]: https://github.com/elastic/elastic-agent-autodiscover/compare/v0.6.10...v0.6.12
 
 
 ## [0.6.13]
