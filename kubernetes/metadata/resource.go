@@ -51,6 +51,7 @@ func NewResourceMetadataGenerator(cfg *config.C, client k8s.Interface) *Resource
 	r := &Resource{
 		config: &c,
 	}
+
 	clusterInfo, err := GetKubernetesClusterIdentifier(cfg, client)
 	if err == nil {
 		r.clusterInfo = clusterInfo
