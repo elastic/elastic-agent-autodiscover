@@ -175,7 +175,6 @@ func getClusterInfoFromKubeadmConfigMap(client k8sclient.Interface, kubeadm bool
 }
 
 func getClusterInfoFromKubeConfigFile(kubeconfig string) (ClusterInfo, error) {
-
 	if kubeconfig == "" {
 		kubeconfig = kubernetes.GetKubeConfigEnvironmentVariable()
 	}
