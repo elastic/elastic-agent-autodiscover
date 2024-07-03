@@ -26,7 +26,6 @@ import (
 
 	"github.com/elastic/elastic-agent-autodiscover/kubernetes"
 	"github.com/elastic/elastic-agent-libs/config"
-	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/safemapstr"
 
@@ -97,8 +96,6 @@ func GetPodMetaGen(
 	replicasetWatcher kubernetes.Watcher,
 	jobWatcher kubernetes.Watcher,
 	metaConf *AddResourceMetadataConfig) MetaGen {
-	log := logp.NewLogger("PASSSSS:")
-	log.Infof("MYPASS METACONF %v, %v", metaConf.Node, metaConf.Namespace)
 	var nodeMetaGen, namespaceMetaGen, rsMetaGen, jobMetaGen MetaGen
 	if nodeWatcher != nil && metaConf.Node.Enabled() {
 		nodeMetaGen = NewNodeMetadataGenerator(metaConf.Node, nodeWatcher.Store(), nodeWatcher.Client())
@@ -146,13 +143,10 @@ func GetKubernetesClusterIdentifier(cfg *config.C, client k8sclient.Interface) (
 }
 
 func getClusterInfoFromKubeadmConfigMap(client k8sclient.Interface, kubeadm bool) (ClusterInfo, error) {
-	log := logp.NewLogger("--------")
-
 	clusterInfo := ClusterInfo{}
 	if client == nil {
 		return clusterInfo, fmt.Errorf("unable to get cluster identifiers from kubeadm-config")
 	}
-	log.Info("----- %v", kubeadm)
 	if kubeadm {
 		return clusterInfo, fmt.Errorf("unable to get cluster identifiers from kubeadm-config because conf_kubeadm access has been disabled")
 	}
