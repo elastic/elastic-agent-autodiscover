@@ -148,7 +148,7 @@ func getClusterInfoFromKubeadmConfigMap(client k8sclient.Interface, kubeadm bool
 		return clusterInfo, fmt.Errorf("unable to get cluster identifiers from kubeadm-config")
 	}
 	if kubeadm {
-		return clusterInfo, fmt.Errorf("unable to get cluster identifiers from kubeadm-config because conf_kubeadm access has been disabled")
+		return clusterInfo, nil
 	}
 	cm, err := client.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "kubeadm-config", metav1.GetOptions{})
 	if err != nil {
