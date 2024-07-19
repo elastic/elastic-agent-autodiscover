@@ -24,7 +24,7 @@ import (
 // Config declares supported configuration for metadata generation
 type Config struct {
 	KubeConfig         string   `config:"kube_config"`
-	KubeAdm            bool     `config:"disable_kubeadm"`
+	KubeAdm            bool     `config:"use_kubeadm"`
 	UseRegexInclude    bool     `config:"use_regex_include"`
 	UseRegexExclude    bool     `config:"use_regex_exclude"`
 	IncludeLabels      []string `config:"include_labels"`
@@ -45,7 +45,7 @@ type AddResourceMetadataConfig struct {
 
 // InitDefaults initializes the defaults for the config.
 func (c *Config) InitDefaults() {
-	c.KubeAdm = false
+	c.KubeAdm = true
 	c.LabelsDedot = true
 	c.AnnotationsDedot = true
 	c.UseRegexInclude = false
