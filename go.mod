@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	github.com/docker/docker v26.1.5+incompatible
-	github.com/docker/go-connections v0.4.0
 	github.com/elastic/elastic-agent-libs v0.3.3
 	github.com/magefile/mage v1.13.0
 	github.com/stretchr/testify v1.9.0
@@ -20,6 +19,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect

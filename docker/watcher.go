@@ -22,9 +22,13 @@ package docker
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -32,7 +36,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/events"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/go-connections/tlsconfig"
 
 	"github.com/elastic/elastic-agent-autodiscover/bus"
 	"github.com/elastic/elastic-agent-libs/logp"
@@ -121,23 +124,37 @@ type Client interface {
 type WatcherConstructor func(logp *logp.Logger, host string, tls *TLSConfig, storeShortID bool) (Watcher, error)
 
 // NewWatcher returns a watcher running for the given settings
-func NewWatcher(log *logp.Logger, host string, tls *TLSConfig, storeShortID bool) (Watcher, error) {
+func NewWatcher(log *logp.Logger, host string, cfg *TLSConfig, storeShortID bool) (Watcher, error) {
 	var httpClient *http.Client
-	if tls != nil {
-		options := tlsconfig.Options{
-			CAFile:   tls.CA,
-			CertFile: tls.Certificate,
-			KeyFile:  tls.Key,
+	if cfg != nil {
+		tlsConfig := &tls.Config{
+			// Prefer TLS1.2 as the client minimum
+			MinVersion: tls.VersionTLS12,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			},
 		}
 
-		tlsc, err := tlsconfig.Client(options)
+		if cfg.CA != "" {
+			CAs, err := certPool(cfg.CA)
+			if err != nil {
+				return nil, err
+			}
+			tlsConfig.RootCAs = CAs
+		}
+
+		tlsCerts, err := getCert(cfg.Certificate, cfg.Key)
 		if err != nil {
 			return nil, err
 		}
+		tlsConfig.Certificates = tlsCerts
 
 		httpClient = &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: tlsc,
+				TLSClientConfig: tlsConfig,
 			},
 		}
 	}
@@ -155,6 +172,44 @@ func NewWatcher(log *logp.Logger, host string, tls *TLSConfig, storeShortID bool
 	}
 
 	return NewWatcherWithClient(log, client, 60*time.Second, storeShortID)
+}
+
+func certPool(caFile string) (*x509.CertPool, error) {
+	certPool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read system certificates: %v", err)
+	}
+	pem, err := os.ReadFile(caFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read CA certificate %q: %v", caFile, err)
+	}
+	if !certPool.AppendCertsFromPEM(pem) {
+		return nil, fmt.Errorf("failed to append certificates from PEM file: %q", caFile)
+	}
+	return certPool, nil
+}
+
+func getCert(certFile string, keyFile string) ([]tls.Certificate, error) {
+	if certFile == "" && keyFile == "" {
+		return nil, nil
+	}
+
+	cert, err := os.ReadFile(certFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read certFile %q: %w", certFile, err)
+	}
+
+	prKeyBytes, err := os.ReadFile(keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read keyFile %q: %w", keyFile, err)
+	}
+
+	tlsCert, err := tls.X509KeyPair(cert, prKeyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("could not create keyPair: %w", err)
+	}
+
+	return []tls.Certificate{tlsCert}, nil
 }
 
 // NewWatcherWithClient creates a new Watcher from a given Docker client
