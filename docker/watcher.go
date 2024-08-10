@@ -177,11 +177,11 @@ func NewWatcher(log *logp.Logger, host string, cfg *TLSConfig, storeShortID bool
 func certPool(caFile string) (*x509.CertPool, error) {
 	certPool, err := x509.SystemCertPool()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read system certificates: %v", err)
+		return nil, fmt.Errorf("failed to read system certificates: %w", err)
 	}
 	pem, err := os.ReadFile(caFile)
 	if err != nil {
-		return nil, fmt.Errorf("could not read CA certificate %q: %v", caFile, err)
+		return nil, fmt.Errorf("could not read CA certificate %q: %w", caFile, err)
 	}
 	if !certPool.AppendCertsFromPEM(pem) {
 		return nil, fmt.Errorf("failed to append certificates from PEM file: %q", caFile)
