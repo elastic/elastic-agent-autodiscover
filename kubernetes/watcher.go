@@ -107,6 +107,7 @@ type watcher struct {
 
 // NewWatcher initializes the watcher client to provide a events handler for
 // resource from the cluster (filtered to the given node)
+// Note: This watcher won't emit workqueue metrics. Use NewNamedWatcher to provide an explicit queue name.
 func NewWatcher(client kubernetes.Interface, resource Resource, opts WatchOptions, indexers cache.Indexers) (Watcher, error) {
 	return NewNamedWatcher("", client, resource, opts, indexers)
 }
@@ -205,6 +206,7 @@ func NewNamedWatcherWithInformer(
 // NewMetadataWatcher initializes a metadata-only watcher client to provide an events handler for
 // resource from the cluster (filtered to the given node).
 // Event handlers defined on this watcher receive PartialObjectMetadata resources.
+// Note: This watcher won't emit workqueue metrics. Use NewNamedWatcher to provide an explicit queue name.
 func NewMetadataWatcher(
 	client kubernetes.Interface,
 	metadataClient metadata.Interface,

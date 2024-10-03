@@ -19,7 +19,6 @@ package metadata
 
 import (
 	"fmt"
-	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,6 +123,6 @@ func RemoveUnnecessaryReplicaSetData(obj interface{}) (interface{}, error) {
 		}
 		return transformed, nil
 	default:
-		return nil, fmt.Errorf("obj of type %v neither a ReplicaSet nor a PartialObjectMetadata", reflect.TypeOf(obj))
+		return nil, fmt.Errorf("obj of type %T neither a ReplicaSet nor a PartialObjectMetadata", obj)
 	}
 }
