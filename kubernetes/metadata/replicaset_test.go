@@ -120,7 +120,7 @@ func TestReplicaset_Generate(t *testing.T) {
 	}
 }
 
-func TestReplicast_GenerateFromName(t *testing.T) {
+func TestReplicaset_GenerateFromName(t *testing.T) {
 	client := k8sfake.NewSimpleClientset()
 	boolean := true
 	tests := []struct {
