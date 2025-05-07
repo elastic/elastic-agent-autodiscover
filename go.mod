@@ -1,6 +1,6 @@
 module github.com/elastic/elastic-agent-autodiscover
 
-go 1.23
+go 1.24
 
 require (
 	github.com/docker/docker v28.1.1+incompatible
