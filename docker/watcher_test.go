@@ -16,7 +16,6 @@
 // under the License.
 
 //go:build linux || darwin || windows
-// +build linux darwin windows
 
 package docker
 
@@ -44,9 +43,9 @@ type MockClient struct {
 	containers    [][]container.Summary
 	containersErr error
 	// event list to send on Events call
-	events []interface{}
+	events []any
 	// done channel is closed when the client has sent all events
-	done chan interface{}
+	done chan any
 }
 
 func (m *MockClient) ContainerList(ctx context.Context, options dockerclient.ContainerListOptions) (dockerclient.ContainerListResult, error) {
@@ -189,7 +188,7 @@ func TestWatcherAddEvents(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "start",
 				Actor: events.Actor{
@@ -242,7 +241,7 @@ func TestWatcherAddEventsShortID(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "start",
 				Actor: events.Actor{
@@ -296,7 +295,7 @@ func TestWatcherUpdateEvent(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "update",
 				Actor: events.Actor{
@@ -344,7 +343,7 @@ func TestWatcherUpdateEventShortID(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "update",
 				Actor: events.Actor{
@@ -384,7 +383,7 @@ func TestWatcherDie(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "die",
 				Actor: events.Actor{
@@ -404,7 +403,7 @@ func TestWatcherDie(t *testing.T) {
 	defer watcher.Stop()
 
 	// Check it doesn't get removed while we request meta for the container
-	for i := 0; i < 18; i++ {
+	for range 18 {
 		watcher.Container("0332dbd79e20")
 		clock.Sleep(watcher.cleanupTimeout / 2)
 		watcher.runCleanup()
@@ -436,7 +435,7 @@ func TestWatcherDieShortID(t *testing.T) {
 				},
 			},
 		},
-		[]interface{}{
+		[]any{
 			events.Message{
 				Action: "die",
 				Actor: events.Actor{
@@ -457,7 +456,7 @@ func TestWatcherDieShortID(t *testing.T) {
 	defer watcher.Stop()
 
 	// Check it doesn't get removed while we request meta for the container
-	for i := 0; i < 18; i++ {
+	for range 18 {
 		watcher.Container("0332dbd79e20")
 		clock.Sleep(watcher.cleanupTimeout / 2)
 		watcher.runCleanup()
@@ -502,17 +501,17 @@ func TestWatcherNoError(t *testing.T) {
 	require.Len(t, obs.FilterMessageSnippet("Failed to call listContainers").All(), 1)
 }
 
-func testWatcher(t *testing.T, containers [][]container.Summary, events []interface{}) (*watcher, chan interface{}) {
+func testWatcher(t *testing.T, containers [][]container.Summary, events []any) (*watcher, chan any) {
 	return testWatcherShortID(t, containers, events, false)
 }
 
-func testWatcherShortID(t *testing.T, containers [][]container.Summary, events []interface{}, enable bool) (*watcher, chan interface{}) {
+func testWatcherShortID(t *testing.T, containers [][]container.Summary, events []any, enable bool) (*watcher, chan any) {
 	logger := logptest.NewTestingLogger(t, "")
 
 	client := &MockClient{
 		containers: containers,
 		events:     events,
-		done:       make(chan interface{}),
+		done:       make(chan any),
 	}
 
 	w, err := NewWatcherWithClient(logger, client, 200*time.Millisecond, enable)
@@ -527,7 +526,7 @@ func testWatcherShortID(t *testing.T, containers [][]container.Summary, events [
 	return watcher, client.done
 }
 
-func runAndWait(w *watcher, done chan interface{}) *watcher {
+func runAndWait(w *watcher, done chan any) *watcher {
 	_ = w.Start()
 	<-done
 	w.Stop()

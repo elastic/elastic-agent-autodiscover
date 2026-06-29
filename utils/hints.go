@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -147,7 +148,7 @@ func getStringAsList(input string) []string {
 	}
 	list := strings.Split(input, ",")
 
-	for i := 0; i < len(list); i++ {
+	for i := range list {
 		list[i] = strings.TrimSpace(list[i])
 	}
 
@@ -392,12 +393,8 @@ func checkSupportedHints(actualannotation, key string, allSupportedHints []strin
 	found := false
 	var incorrecthint string
 
-	for _, checksupported := range allSupportedHints {
-		if actualannotation == checksupported {
-			found = true
-			break
-		}
-
+	if slices.Contains(allSupportedHints, actualannotation) {
+		found = true
 	}
 	if !found {
 		incorrecthint = key

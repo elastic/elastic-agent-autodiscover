@@ -54,13 +54,13 @@ func TestWatcherHandlers(t *testing.T) {
 	var added, updated, deleted bool
 
 	watcher.AddEventHandler(ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
+		AddFunc: func(obj any) {
 			added = true
 		},
-		UpdateFunc: func(obj interface{}) {
+		UpdateFunc: func(obj any) {
 			updated = true
 		},
-		DeleteFunc: func(obj interface{}) {
+		DeleteFunc: func(obj any) {
 			deleted = true
 		},
 	})
@@ -105,7 +105,7 @@ func TestWatcherIsUpdated(t *testing.T) {
 	// set a custom IsUpdated that always returns true
 	watcher, err := NewNamedWatcherWithInformer("test", client, resource, informer,
 		logptest.NewTestingLogger(t, ""),
-		WatchOptions{IsUpdated: func(old, new interface{}) bool {
+		WatchOptions{IsUpdated: func(old, new any) bool {
 			return true
 		}})
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestWatcherIsUpdated(t *testing.T) {
 	var updated bool
 
 	watcher.AddEventHandler(ResourceEventHandlerFuncs{
-		UpdateFunc: func(obj interface{}) {
+		UpdateFunc: func(obj any) {
 			updated = true
 		},
 	})

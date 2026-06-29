@@ -42,7 +42,7 @@ func TestGetProcessors(t *testing.T) {
 	assert.Equal(t, []mapstr.M{
 		mapstr.M{
 			"add_fields": mapstr.M{
-				"fields": map[string]interface{}{
+				"fields": map[string]any{
 					"foo": "bar",
 				},
 			},
