@@ -36,6 +36,7 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+	"github.com/elastic/elastic-agent-libs/logp/logptest"
 )
 
 type MockClient struct {
@@ -318,7 +319,7 @@ func TestWatcherUpdateEvent(t *testing.T) {
 			Labels: map[string]string{"label": "bar"},
 		},
 	}, watcher.Containers())
-	assert.Equal(t, 0, len(watcher.deleted))
+	assert.Empty(t, watcher.deleted)
 }
 
 func TestWatcherUpdateEventShortID(t *testing.T) {
@@ -367,7 +368,7 @@ func TestWatcherUpdateEventShortID(t *testing.T) {
 			Labels: map[string]string{"label": "bar"},
 		},
 	}, watcher.Containers())
-	assert.Equal(t, 0, len(watcher.deleted))
+	assert.Empty(t, watcher.deleted)
 }
 
 func TestWatcherDie(t *testing.T) {
@@ -407,7 +408,7 @@ func TestWatcherDie(t *testing.T) {
 		watcher.Container("0332dbd79e20")
 		clock.Sleep(watcher.cleanupTimeout / 2)
 		watcher.runCleanup()
-		if !assert.Equal(t, 1, len(watcher.Containers())) {
+		if !assert.Len(t, watcher.Containers(), 1) {
 			break
 		}
 	}
@@ -419,7 +420,7 @@ func TestWatcherDie(t *testing.T) {
 	// Check that after the cleanup period the container is removed
 	clock.Sleep(watcher.cleanupTimeout + 1*time.Second)
 	watcher.runCleanup()
-	assert.Equal(t, 0, len(watcher.Containers()))
+	assert.Empty(t, watcher.Containers())
 }
 
 func TestWatcherDieShortID(t *testing.T) {
@@ -460,7 +461,7 @@ func TestWatcherDieShortID(t *testing.T) {
 		watcher.Container("0332dbd79e20")
 		clock.Sleep(watcher.cleanupTimeout / 2)
 		watcher.runCleanup()
-		if !assert.Equal(t, 1, len(watcher.Containers())) {
+		if !assert.Len(t, watcher.Containers(), 1) {
 			break
 		}
 	}
@@ -472,7 +473,7 @@ func TestWatcherDieShortID(t *testing.T) {
 	// Check that after the cleanup period the container is removed
 	clock.Sleep(watcher.cleanupTimeout + 1*time.Second)
 	watcher.runCleanup()
-	assert.Equal(t, 0, len(watcher.Containers()))
+	assert.Empty(t, watcher.Containers())
 }
 
 func TestWatcherNoError(t *testing.T) {
@@ -506,8 +507,7 @@ func testWatcher(t *testing.T, containers [][]container.Summary, events []interf
 }
 
 func testWatcherShortID(t *testing.T, containers [][]container.Summary, events []interface{}, enable bool) (*watcher, chan interface{}) {
-	err := logp.TestingSetup()
-	require.NoError(t, err)
+	logger := logptest.NewTestingLogger(t, "")
 
 	client := &MockClient{
 		containers: containers,
@@ -515,7 +515,7 @@ func testWatcherShortID(t *testing.T, containers [][]container.Summary, events [
 		done:       make(chan interface{}),
 	}
 
-	w, err := NewWatcherWithClient(logp.L(), client, 200*time.Millisecond, enable)
+	w, err := NewWatcherWithClient(logger, client, 200*time.Millisecond, enable)
 	if err != nil {
 		t.Fatal(err)
 	}

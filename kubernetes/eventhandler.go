@@ -174,8 +174,8 @@ func (n *namespacePodUpdater) OnUpdate(obj interface{}) {
 	cachedNamespace, ok := cachedObject.(*Namespace)
 
 	if ok && ns.Name == cachedNamespace.Name {
-		labelscheck := reflect.DeepEqual(ns.ObjectMeta.Labels, cachedNamespace.ObjectMeta.Labels)
-		annotationscheck := reflect.DeepEqual(ns.ObjectMeta.Annotations, cachedNamespace.ObjectMeta.Annotations)
+		labelscheck := reflect.DeepEqual(ns.Labels, cachedNamespace.Labels)
+		annotationscheck := reflect.DeepEqual(ns.Annotations, cachedNamespace.Annotations)
 		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {
@@ -234,8 +234,8 @@ func (n *nodePodUpdater) OnUpdate(obj interface{}) {
 	cachedNode, ok := cachedObject.(*Node)
 
 	if ok && node.Name == cachedNode.Name {
-		labelscheck := reflect.DeepEqual(node.ObjectMeta.Labels, cachedNode.ObjectMeta.Labels)
-		annotationscheck := reflect.DeepEqual(node.ObjectMeta.Annotations, cachedNode.ObjectMeta.Annotations)
+		labelscheck := reflect.DeepEqual(node.Labels, cachedNode.Labels)
+		annotationscheck := reflect.DeepEqual(node.Annotations, cachedNode.Annotations)
 		// Only if there is a difference in Metadata labels or annotations proceed to Pod update
 		if !labelscheck || !annotationscheck {
 			for _, pod := range n.store.List() {

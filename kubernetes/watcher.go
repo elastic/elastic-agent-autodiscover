@@ -146,8 +146,16 @@ func NewNamedWatcherWithInformer(
 
 	if opts.IsUpdated == nil {
 		opts.IsUpdated = func(o, n interface{}) bool {
-			old, _ := accessor.ResourceVersion(o.(runtime.Object))
-			new, _ := accessor.ResourceVersion(n.(runtime.Object))
+			oldObj, ok := o.(runtime.Object)
+			if !ok {
+				return true
+			}
+			newObj, ok := n.(runtime.Object)
+			if !ok {
+				return true
+			}
+			old, _ := accessor.ResourceVersion(oldObj)
+			new, _ := accessor.ResourceVersion(newObj)
 
 			// Only enqueue changes that have a different resource versions to avoid processing resyncs.
 			return old != new

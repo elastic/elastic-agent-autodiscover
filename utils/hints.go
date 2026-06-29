@@ -180,7 +180,11 @@ func GetHintAsConfigs(hints mapstr.M, key string, logger *logp.Logger) []mapstr.
 // IsEnabled will return true when 'enabled' is **explicitly** set to true.
 func IsEnabled(hints mapstr.M, key string) bool {
 	if value, err := hints.GetValue(fmt.Sprintf("%s.enabled", key)); err == nil {
-		enabled, _ := strconv.ParseBool(value.(string))
+		str, ok := value.(string)
+		if !ok {
+			return false
+		}
+		enabled, _ := strconv.ParseBool(str)
 		return enabled
 	}
 
@@ -190,7 +194,11 @@ func IsEnabled(hints mapstr.M, key string) bool {
 // IsDisabled will return true when 'enabled' is **explicitly** set to false.
 func IsDisabled(hints mapstr.M, key string, logger *logp.Logger) bool {
 	if value, err := hints.GetValue(fmt.Sprintf("%s.enabled", key)); err == nil {
-		enabled, err := strconv.ParseBool(value.(string))
+		str, ok := value.(string)
+		if !ok {
+			return false
+		}
+		enabled, err := strconv.ParseBool(str)
 		if err != nil {
 			logger.Named(logName).Debugw("Error parsing 'enabled' hint.",
 				"error", err, "autodiscover.hints", hints)
