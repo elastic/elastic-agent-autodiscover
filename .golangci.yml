@@ -15,7 +15,7 @@ linters:
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13
     - forbidigo # forbids identifiers	matched by reg exps
     - gomoddirectives # manage the use of 'replace', 'retract', and 'excludes' directives in go.mod
-    - gomodguard # check for blocked dependencies
+    - gomodguard_v2 # check for blocked dependencies
     - gosec # inspects source code for security problems
     - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - importas # enforces consistent import aliases
@@ -77,7 +77,7 @@ linters:
       # Allow local `replace` directives. Default is false.
       replace-local: false
 
-    gomodguard:
+    gomodguard_v2:
       # List of blocked modules.
       blocked:
         modules:
