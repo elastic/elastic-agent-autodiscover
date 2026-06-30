@@ -80,28 +80,19 @@ linters:
     gomodguard_v2:
       # List of blocked modules.
       blocked:
-        modules:
-          # Blocked module.
-          - github.com/pkg/errors:
-              # Recommended modules that should be used instead. (Optional)
-              recommendations:
-                - errors
-                - fmt
-              reason: This package is deprecated, use fmt.Errorf with %%w instead
-          - go.uber.org/multierr:
-              recommendations:
-                - errors
-              reason: This package is deprecated, use `errors.Join` instead
-          - gotest.tools/v3:
-              recommendations:
-                - github.com/stretchr/testify
-              reason: Use one assertion library consistently across the codebase
-          - github.com/google/uuid:
-              recommendations:
-                - github.com/gofrs/uuid/v5
-              reason: Use one uuid library consistently across the codebase
-          - github.com/elastic/beats/v7:
-              reason: There must be no Beats dependency
+        - module: github.com/pkg/errors
+          recommendations:
+            - errors
+            - fmt
+          reason: This package is deprecated, use fmt.Errorf with %%w instead
+        - module: go.uber.org/multierr
+          recommendations:
+            - errors
+          reason: This package is deprecated, use `errors.Join` instead
+        - module: gotest.tools/v3
+          recommendations:
+            - github.com/stretchr/testify
+          reason: Use one assertion library consistently across the codebase
     gosec:
       excludes:
         - G306 # Expect WriteFile permissions to be 0600 or less
