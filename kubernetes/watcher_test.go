@@ -19,7 +19,6 @@ package kubernetes
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -55,7 +54,13 @@ func TestWatcherStopPreventsRestart(t *testing.T) {
 	listWatch := cachetest.NewFakeControllerSource()
 	resource := &Pod{}
 	informer := cache.NewSharedInformer(listWatch, resource, 0)
-	w, err := NewNamedWatcherWithInformer("test", client, resource, informer, logptest.NewTestingLogger(t, ""), WatchOptions{})
+	w, err := NewNamedWatcherWithInformer(
+		"test",
+		client,
+		resource,
+		informer,
+		logptest.NewTestingLogger(t, ""),
+		WatchOptions{})
 	require.NoError(t, err)
 
 	require.NoError(t, w.Start())
@@ -64,12 +69,12 @@ func TestWatcherStopPreventsRestart(t *testing.T) {
 	// Give the informer's Run loop time to observe the cancelled context and
 	// mark itself stopped so IsStopped() reflects the terminal state.
 	assert.Eventually(t, func() bool {
+		//nolint:errcheck // It's a test, it can panic on failure
 		return w.(*watcher).informer.IsStopped()
 	}, time.Second*5, time.Millisecond)
 
-	err = w.Start()
-	require.Error(t, err)
-	assert.True(t, errors.Is(err, ErrWatcherStopped), "expected ErrWatcherStopped, got: %v", err)
+	// Try starting watcher again and check for the correct error returned
+	require.ErrorIs(t, w.Start(), ErrWatcherStopped, "expected ErrWatcherStopped, got: %v", err)
 }
 
 // TestWatcherStartRejectsInvalidLifecycleStates verifies that Start refuses to
@@ -77,13 +82,19 @@ func TestWatcherStopPreventsRestart(t *testing.T) {
 // look healthy.
 func TestWatcherStartRejectsInvalidLifecycleStates(t *testing.T) {
 	newWatcher := func(t *testing.T) *watcher {
-		t.Helper()
 		client := fake.NewSimpleClientset()
 		listWatch := cachetest.NewFakeControllerSource()
 		resource := &Pod{}
 		informer := cache.NewSharedInformer(listWatch, resource, 0)
-		w, err := NewNamedWatcherWithInformer("test", client, resource, informer, logptest.NewTestingLogger(t, ""), WatchOptions{})
+		w, err := NewNamedWatcherWithInformer(
+			"test",
+			client,
+			resource,
+			informer,
+			logptest.NewTestingLogger(t, ""),
+			WatchOptions{})
 		require.NoError(t, err)
+		//nolint:errcheck // It's a test, we know the underlying type
 		return w.(*watcher)
 	}
 
@@ -93,38 +104,36 @@ func TestWatcherStartRejectsInvalidLifecycleStates(t *testing.T) {
 		require.False(t, w.informer.IsStopped())
 		require.NoError(t, w.ctx.Err())
 
-		err := w.Start()
-		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrWatcherStopped), "expected ErrWatcherStopped, got: %v", err)
+		require.ErrorIs(t, w.Start(), ErrWatcherStopped, "expected ErrWatcherStopped")
 	})
 
 	t.Run("context cancelled", func(t *testing.T) {
 		w := newWatcher(t)
-		w.stop()
+		w.stop() // context cancel func
 		require.False(t, w.informer.IsStopped())
 		require.False(t, w.queue.ShuttingDown())
 		require.ErrorIs(t, w.ctx.Err(), context.Canceled)
 
-		err := w.Start()
-		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrWatcherStopped), "expected ErrWatcherStopped, got: %v", err)
+		require.ErrorIs(t, w.Start(), ErrWatcherStopped, "expected ErrWatcherStopped")
 	})
 
 	t.Run("informer stopped", func(t *testing.T) {
 		w := newWatcher(t)
 		stopCh := make(chan struct{})
+
 		go w.informer.Run(stopCh)
 		require.Eventually(t, w.informer.HasSynced, time.Second*5, time.Millisecond)
+
 		close(stopCh)
+
 		require.Eventually(t, func() bool {
 			return w.informer.IsStopped()
 		}, time.Second*5, time.Millisecond)
+
 		require.False(t, w.queue.ShuttingDown())
 		require.NoError(t, w.ctx.Err())
 
-		err := w.Start()
-		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrWatcherStopped), "expected ErrWatcherStopped, got: %v", err)
+		require.ErrorIs(t, w.Start(), ErrWatcherStopped, "expected ErrWatcherStopped")
 	})
 }
 
