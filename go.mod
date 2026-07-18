@@ -1,6 +1,6 @@
 module github.com/elastic/elastic-agent-autodiscover
 
-go 1.25
+go 1.26
 
 require (
 	github.com/docker/go-connections v0.7.0
