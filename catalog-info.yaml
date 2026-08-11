@@ -8,6 +8,6 @@ metadata:
 
 spec:
   type: library
-  owner: group:Streams
+  owner: group:streams
   system: platform-ingest
   lifecycle: production
