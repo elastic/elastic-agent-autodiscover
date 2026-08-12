@@ -1,5 +1,10 @@
 # elastic-agent-autodiscover
 
+> [!IMPORTANT]
+> The contents of this repository have been moved into Beats repository ([#51804](https://github.com/elastic/beats/pull/51804)).
+> This repository no longer accepts changes.
+> To make changes, contribute to the [Beats](https://github.com/elastic/beats/) repository.
+
 This repo contains packages required by autodiscover.
 
 * `github.com/elastic/elastic-agent-autodiscover/bus`
@@ -7,7 +12,6 @@ This repo contains packages required by autodiscover.
 * `github.com/elastic/elastic-agent-autodiscover/kubernetes`
 * `github.com/elastic/elastic-agent-autodiscover/kubernetes/metadata`
 * `github.com/elastic/elastic-agent-autodiscover/utils`
-
 
 ## Releasing updates
 
